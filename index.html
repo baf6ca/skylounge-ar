@@ -15,33 +15,79 @@
 <body>
     <video id="webcam" autoplay playsinline muted></video>
 
-    <a-scene vr-mode-ui="enabled: false" renderer="alpha: true; colorManagement: true;" device-orientation-permission-ui="enabled: false">
+    <a-scene vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
         <a-camera look-controls="touchEnabled: false"></a-camera>
 
         <a-entity id="world">
             
             <a-entity id="calibrationTarget" position="0 1.5 -50">
-                <a-text value="[Mire na Caixa d'agua e clique abaixo]" align="center" color="yellow" width="30" label-with-line="lineHeight: 3; lineColor: yellow;"></a-text>
+                <a-text value="[Mire na Caixa d'agua e clique abaixo]" align="center" color="yellow" width="30" position="0 5 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="5" radius="0.03" color="yellow" position="0 2.5 0"></a-cylinder>
             </a-entity>
 
             <!-- =================================================================== -->
-            <!-- ======== PONTOS DE INTERESSE COM LINHAS INDICATIVAS ========= -->
+            <!-- ======== PONTOS DE INTERESSE COM FUNDO E LINHA (CORRIGIDO) ======== -->
             <!-- =================================================================== -->
             
-            <!-- A POSIÇÃO DA <a-entity> AGORA É O PONTO FINAL DA LINHA (NO PRÉDIO) -->
+            <a-entity position="-70 1 -120">
+                <a-text value="Test Track" align="center" color="white" width="40" position="0 8 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="8" radius="0.03" color="#A9A9A9" position="0 4 0"></a-cylinder>
+            </a-entity>
 
-            <a-entity position="-70 1 -120" label-with-line="text: Test Track; width: 40; lineHeight: 8; lineColor: #A9A9A9;"></a-entity>
-            <a-entity position="-10 2 -70" label-with-line="text: Biofuels Competence Center; width: 25; wrapCount: 25; lineHeight: 6; lineColor: #3CB371;"></a-entity>
-            <a-entity position="25 0 -50" label-with-line="text: Cantina; width: 30; lineHeight: 5; lineColor: #9400D3;"></a-entity>
-            <a-entity position="60 0 -70" label-with-line="text: MA - Automotive Training Center; width: 25; wrapCount: 25; lineHeight: 7; lineColor: #1E90FF;"></a-entity>
-            <a-entity position="-100 0 -100" label-with-line="text: PT - Power Tools; width: 40; lineHeight: 10; lineColor: #005691;"></a-entity>
-            <a-entity position="-120 2 -150" label-with-line="text: Logistic Center; width: 40; lineHeight: 10; lineColor: #C71585;"></a-entity>
-            <a-entity position="-150 5 -100" label-with-line="text: Preserved Area; width: 40; lineHeight: 12; lineColor: #228B22;"></a-entity>
-            <a-entity position="30 2 -80" label-with-line="text: VM - Vehicle Motion Labs; width: 25; wrapCount: 25; lineHeight: 7; lineColor: #6A5ACD;"></a-entity>
-            <a-entity position="40 5 -150" label-with-line="text: PS - Power Solutions; width: 40; lineHeight: 10; lineColor: #FF4500;"></a-entity>
-            <a-entity position="50 0 -90" label-with-line="text: EM - Electrification Showroom; width: 25; wrapCount: 25; lineHeight: 8; lineColor: #00CED1;"></a-entity>
-            <a-entity position="80 0 -95" label-with-line="text: SMAG; width: 30; lineHeight: 6; lineColor: #FFD700;"></a-entity>
-            <a-entity position="70 0 -60" label-with-line="text: MA - Mobility Aftermarket; width: 25; wrapCount: 25; lineHeight: 7; lineColor: #ADD8E6;"></a-entity>
+            <a-entity position="-10 2 -70">
+                <a-text value="Biofuels Competence Center" wrap-count="25" align="center" color="white" width="30" position="0 6 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="6" radius="0.03" color="#3CB371" position="0 3 0"></a-cylinder>
+            </a-entity>
+            
+            <a-entity position="25 0 -50">
+                <a-text value="Cantina" align="center" color="white" width="30" position="0 5 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="5" radius="0.03" color="#9400D3" position="0 2.5 0"></a-cylinder>
+            </a-entity>
+
+            <a-entity position="60 0 -70">
+                <a-text value="MA - Automotive Training Center" wrap-count="25" align="center" color="white" width="30" position="0 7 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="7" radius="0.03" color="#1E90FF" position="0 3.5 0"></a-cylinder>
+            </a-entity>
+
+            <a-entity position="-100 0 -100">
+                <a-text value="PT - Power Tools" align="center" color="white" width="40" position="0 10 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="10" radius="0.03" color="#005691" position="0 5 0"></a-cylinder>
+            </a-entity>
+
+            <a-entity position="-120 2 -150">
+                <a-text value="Logistic Center" align="center" color="white" width="40" position="0 10 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="10" radius="0.03" color="#C71585" position="0 5 0"></a-cylinder>
+            </a-entity>
+            
+            <a-entity position="-150 5 -100">
+                <a-text value="Preserved Area" align="center" color="white" width="40" position="0 12 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="12" radius="0.03" color="#228B22" position="0 6 0"></a-cylinder>
+            </a-entity>
+
+            <a-entity position="30 2 -80">
+                <a-text value="VM - Vehicle Motion Labs" wrap-count="25" align="center" color="white" width="30" position="0 7 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="7" radius="0.03" color="#6A5ACD" position="0 3.5 0"></a-cylinder>
+            </a-entity>
+            
+            <a-entity position="40 5 -150">
+                <a-text value="PS - Power Solutions" align="center" color="white" width="40" position="0 10 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="10" radius="0.03" color="#FF4500" position="0 5 0"></a-cylinder>
+            </a-entity>
+            
+            <a-entity position="50 0 -90">
+                <a-text value="EM - Electrification Showroom" wrap-count="25" align="center" color="white" width="30" position="0 8 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="8" radius="0.03" color="#00CED1" position="0 4 0"></a-cylinder>
+            </a-entity>
+
+            <a-entity position="80 0 -95">
+                <a-text value="SMAG" align="center" color="white" width="30" position="0 6 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="6" radius="0.03" color="#FFD700" position="0 3 0"></a-cylinder>
+            </a-entity>
+
+            <a-entity position="70 0 -60">
+                <a-text value="MA - Mobility Aftermarket" wrap-count="25" align="center" color="white" width="30" position="0 7 0" background-color="black" background-opacity="0.8"></a-text>
+                <a-cylinder height="7" radius="0.03" color="#ADD8E6" position="0 3.5 0"></a-cylinder>
+            </a-entity>
 
         </a-entity>
     </a-scene>
@@ -52,68 +98,12 @@
     </div>
 
     <script>
-        // NOVO COMPONENTE INTELIGENTE: label-with-line
-        AFRAME.registerComponent('label-with-line', {
-            schema: {
-                text: {type: 'string', default: ''},
-                width: {type: 'number', default: 30},
-                wrapCount: {type: 'number', default: 30},
-                lineHeight: {type: 'number', default: 5},
-                lineColor: {type: 'color', default: 'white'}
-            },
-            init: function () {
-                var data = this.data;
-                var el = this.el;
-
-                // Cria o elemento de texto
-                var textEl = document.createElement('a-text');
-                textEl.setAttribute('value', data.text);
-                textEl.setAttribute('align', 'center');
-                textEl.setAttribute('color', 'white');
-                textEl.setAttribute('width', data.width);
-                textEl.setAttribute('wrap-count', data.wrapCount);
-                
-                // Posiciona o texto acima do ponto de ancoragem
-                textEl.setAttribute('position', `0 ${data.lineHeight + 1} 0`);
-                el.appendChild(textEl);
-
-                // Espera o texto ser renderizado para criar o fundo e a linha
-                textEl.addEventListener('text-rendered', (evt) => {
-                    var textMesh = textEl.getObject3D('text');
-                    if (!textMesh) return;
-
-                    var box = new THREE.Box3().setFromObject(textMesh);
-                    var textWidth = box.max.x - box.min.x;
-                    var textHeight = box.max.y - box.min.y;
-                    var padding = 0.3;
-
-                    // Cria o plano de fundo
-                    var background = new THREE.Mesh(
-                        new THREE.PlaneGeometry(textWidth + padding, textHeight + padding),
-                        new THREE.MeshBasicMaterial({ color: 'black', transparent: true, opacity: 0.7 })
-                    );
-                    
-                    var center = box.getCenter(new THREE.Vector3());
-                    background.position.copy(center);
-                    background.position.z = -0.01;
-                    textEl.object3D.add(background);
-
-                    // Cria a linha conectora
-                    var line = document.createElement('a-cylinder');
-                    line.setAttribute('height', data.lineHeight);
-                    line.setAttribute('radius', '0.03');
-                    line.setAttribute('color', data.lineColor);
-                    // Posiciona a linha para conectar o chão ao texto
-                    line.setAttribute('position', `0 ${data.lineHeight / 2} 0`);
-                    el.appendChild(line);
-                });
-            }
-        });
-
-        // --- CÓDIGO DE CÂMERA E CALIBRAÇÃO ---
+        // --- CÓDIGO DE CÂMERA E CALIBRAÇÃO (Sem alterações) ---
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
             .then(stream => {
-                document.getElementById('webcam').srcObject = stream;
+                const video = document.getElementById('webcam');
+                video.srcObject = stream;
+                video.play();
             }).catch(err => { alert("Ative a câmera para rodar a experiência de AR."); });
 
         const REFERENCE_HEADING = 100;
