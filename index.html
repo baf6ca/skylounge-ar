@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Bosch Skylounge AR - Versão Billboard Final</title>
     <meta name="description" content="Experiência de Realidade Aumentada com coordenadas geográficas.">
+    <!-- Importa a biblioteca A-Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; }
@@ -16,6 +18,7 @@
     <video id="webcam" autoplay playsinline muted></video>
 
     <a-scene id="scene" vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
+        <!-- A câmera virtual do usuário -->
         <a-camera id="user-camera" look-controls="touchEnabled: false"></a-camera>
         <a-entity id="world"></a-entity>
     </a-scene>
@@ -27,26 +30,11 @@
 
     <script>
         // ===================================================================
-        // ========== 1. O NOVO COMPONENTE "MÁGICO": face-camera ==========
-        // ===================================================================
-        AFRAME.registerComponent('face-camera', {
-            tick: function () {
-                var camera = this.el.sceneEl.camera;
-                var worldPosition = new THREE.Vector3();
-                
-                // Pega a posição da câmera no mundo
-                camera.getWorldPosition(worldPosition);
-                
-                // Faz a entidade "olhar" para a posição da câmera, mas travando os eixos X e Z para não inclinar
-                this.el.object3D.lookAt(worldPosition);
-            }
-        });
-
-        // ===================================================================
-        // ========== 2. CONFIGURAÇÃO GEOGRÁFICA (SUAS COORDENADAS) ==========
+        // ========== 1. CONFIGURAÇÃO GEOGRÁFICA (SUAS COORDENADAS) ==========
         // ===================================================================
         const POV_COORDS = { lat: -22.897966, lon: -47.115815 };
         const CALIBRATION_TARGET_COORDS = { lat: -22.897553, lon: -47.113375 };
+        
         const POINTS_OF_INTEREST = [
             { name: "Caixa d'agua\n(Calibração)", lat: -22.897553, lon: -47.113375, color: '#FFFF00', height: 5, scale: 1.0, id: 'calibrationTarget' },
             { name: "Biofuels Competence\nCenter", lat: -22.897342, lon: -47.112256, color: '#3CB371', height: 7, scale: 1.2 },
@@ -68,16 +56,26 @@
         // ===================================================================
         // =========== 3. CÁLCULOS GEOMÉTRICOS E CRIAÇÃO DO MUNDO ==========
         // ===================================================================
-        function getBearingAndDistance(start, end) { /* ...código inalterado... */ 
-            const R = 6371e3; const lat1 = start.lat * Math.PI / 180, lat2 = end.lat * Math.PI / 180; const dLon = (end.lon - start.lon) * Math.PI / 180;
-            const x = Math.cos(lat2) * Math.sin(dLon); const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+        function getBearingAndDistance(start, end) { 
+            const R = 6371e3; 
+            const lat1 = start.lat * Math.PI / 180, lat2 = end.lat * Math.PI / 180; 
+            const dLon = (end.lon - start.lon) * Math.PI / 180;
+            const x = Math.cos(lat2) * Math.sin(dLon); 
+            const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
             let bearing = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
             const a = Math.sin((lat2-lat1)/2)**2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2)**2;
             const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
             return { bearing, distance };
         }
-        function toXZ(d, b) { const a = b * Math.PI / 180; return { x: d * Math.sin(a), z: -d * Math.cos(a) }; }
         
+        function toXZ(d, b) { 
+            const a = b * Math.PI / 180; 
+            return { x: d * Math.sin(a), z: -d * Math.cos(a) }; 
+        }
+        
+        // Array global para guardar as referências das placas que precisam girar
+        const billboardEntities = [];
+
         function createPois() {
             const world = document.getElementById('world');
             POINTS_OF_INTEREST.forEach(poi => {
@@ -88,9 +86,11 @@
                 if (poi.id) entity.id = poi.id;
                 entity.setAttribute('position', `${x} 0 ${z}`);
                 
+                // --- Placa (Texto + Fundo) ---
                 let billboard = document.createElement('a-entity');
-                billboard.setAttribute('face-camera', ''); // USANDO O NOVO COMPONENTE
                 billboard.setAttribute('position', `0 ${poi.height} 0`);
+                // Adicionamos uma classe identificadora para nosso loop JS
+                billboard.classList.add('ar-billboard');
                 
                 const scale = Math.max(1, distance / 50) * poi.scale;
 
@@ -103,14 +103,15 @@
                 textEl.setAttribute('position', '0 0 0.1');
 
                 let planeEl = document.createElement('a-plane');
-                planeEl.setAttribute('width', 5 * scale);
+                planeEl.setAttribute('width', 5.5 * scale);
                 planeEl.setAttribute('height', (poi.name.split('\n').length * 0.5 + 0.4) * scale);
                 planeEl.setAttribute('color', 'black');
                 planeEl.setAttribute('opacity', '0.7');
 
+                // --- Linha (grossa e fixa no chão) ---
                 let lineEl = document.createElement('a-cylinder');
                 lineEl.setAttribute('height', poi.height);
-                lineEl.setAttribute('radius', 0.05 * scale);
+                lineEl.setAttribute('radius', 0.12 * scale);
                 lineEl.setAttribute('color', poi.color);
                 lineEl.setAttribute('position', `0 ${poi.height / 2} 0`);
                 
@@ -119,13 +120,44 @@
                 entity.appendChild(billboard);
                 entity.appendChild(lineEl);
                 world.appendChild(entity);
+                
+                // Salva a referência na nossa lista de animação
+                billboardEntities.push(billboard.object3D);
             });
         }
         
         createPois();
 
         // ===================================================================
-        // =============== 4. LÓGICA DA CÂMERA E CALIBRAÇÃO ================
+        // ========== 4. O NOVO LOOP DE ROTAÇÃO NATIVO (BILLBOARD REAL) =====
+        // ===================================================================
+        const cameraEl = document.getElementById('user-camera');
+        const cameraPos = new THREE.Vector3();
+
+        function updateBillboards() {
+            if (cameraEl && cameraEl.object3D && billboardEntities.length > 0) {
+                // Obtém a posição absoluta da câmera no cenário
+                cameraEl.object3D.getWorldPosition(cameraPos);
+                
+                // Força cada placa a olhar diretamente para a câmera
+                billboardEntities.forEach(obj => {
+                    // Copia a posição da câmera para calcular a rotação
+                    let target = cameraPos.clone();
+                    // Mantém a placa reta no eixo vertical (Y) para não inclinar para cima/baixo
+                    target.y = obj.position.y; 
+                    
+                    obj.lookAt(target);
+                });
+            }
+            // Agenda a próxima execução (60 frames por segundo)
+            requestAnimationFrame(updateBillboards);
+        }
+        
+        // Inicializa o loop de rotação
+        requestAnimationFrame(updateBillboards);
+
+        // ===================================================================
+        // =============== 5. LÓGICA DA CÂMERA E CALIBRAÇÃO ================
         // ===================================================================
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
             .then(stream => { document.getElementById('webcam').srcObject = stream; })
