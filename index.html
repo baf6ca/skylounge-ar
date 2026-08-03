@@ -10,23 +10,23 @@
         body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
         #webcam { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
         
-        /* CSS das Placas 2D Flutuantes (Super legíveis e responsivas) */
+        /* CSS das Placas 2D Flutuantes */
         .poi-label {
             position: absolute;
-            background-color: rgba(0, 0, 0, 0.85); /* 15% transparente */
+            background-color: rgba(0, 0, 0, 0.85); /* Fundo preto 15% transparente */
             color: white;
-            padding: 12px 18px; /* Mais espaço interno */
+            padding: 12px 18px; /* Ótimo espaço interno para o texto respirar */
             border-radius: 8px;
-            font-size: 22px; /* FONTE BEM MAIOR */
+            font-size: 22px; /* Fonte bem grande e legível */
             font-weight: bold;
             white-space: pre-line;
             text-align: center;
             pointer-events: none;
             z-index: 5;
-            transform: translate(-50%, -100%); /* Alinha o centro da base do box com a linha */
+            transform: translate(-50%, -100%); /* Garante que a ponta da linha toque na base do box */
             border: 1.5px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-            display: none; /* Exibido dinamicamente via JS se estiver na tela */
+            display: none; /* Controlado dinamicamente por JS */
         }
 
         /* SVG para desenhar as linhas grossas por cima do feed de vídeo */
@@ -40,7 +40,7 @@
             z-index: 4;
         }
 
-        /* Menu de Calibração */
+        /* Container de Calibração */
         .ui-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; width: 90%; max-width: 400px; }
         .calibrate-button { padding: 14px 24px; background-color: #007BC0; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); width: 100%; }
         .instructions { color: white; background-color: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; line-height: 1.4; }
@@ -52,7 +52,7 @@
     <!-- Canvas SVG para as linhas conectoras grossas -->
     <svg id="svg-overlay"></svg>
 
-    <!-- Container das tags de texto HTML 2D -->
+    <!-- Container das placas de texto HTML 2D -->
     <div id="labels-container"></div>
 
     <a-scene id="scene" vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
@@ -85,10 +85,10 @@
             { name: "PS - Power Solutions", lat: -22.895686, lon: -47.112905, color: '#FF4500', height: 8 },
             { name: "EM - Electrification\nShowroom", lat: -22.896867, lon: -47.114718, color: '#00CED1', height: 7 },
             { name: "SMAG", lat: -22.896846, lon: -47.113732, color: '#FFD700', height: 5.5 },
-            // Coordenada do MA - Mobility Aftermarket ajustada para ficar logo atrás e perto da PT
+            // MA - Mobility Aftermarket colocado no mesmo prédio que a PT e ligeiramente ao lado/recuado
             { name: "MA - Mobility\nAftermarket", lat: -22.897000, lon: -47.115500, color: '#ADD8E6', height: 6 },
             { name: "Galvanic", lat: -22.895672, lon: -47.114027, color: '#DA70D6', height: 6 },
-            // Bloco de Serviços com quebras de linha e linha bem mais alta (height: 14)
+            // Bloco de Serviços verticalizado, mais alto e visível (height: 14)
             { name: "Bosch Digital\nHuman Resources\nService Solutions\nBosch Training Center\nAmbulatory", lat: -22.897929, lon: -47.113593, color: '#87CEEB', height: 14 }
         ];
 
@@ -111,7 +111,7 @@
             return { x: d * Math.sin(a), z: -d * Math.cos(a) }; 
         }
 
-        // Variável corrigida para padrão consistente em todo o código
+        // VARIÁVEL CORRIGIDA: Única em todo o código (Evita o travamento)
         const poisInScene = [];
 
         function createPois() {
@@ -122,7 +122,7 @@
                 const { bearing, distance } = getBearingAndDistance(POV_COORDS, poi);
                 const { x, z } = toXZ(distance, bearing);
 
-                // Âncoras virtuais invisíveis
+                // Âncoras tridimensionais
                 let anchor = document.createElement('a-entity');
                 anchor.setAttribute('position', `${x} 0 ${z}`);
                 if (poi.id) anchor.id = poi.id;
@@ -132,15 +132,15 @@
                 anchor.appendChild(tip);
                 world.appendChild(anchor);
 
-                // Criação da placa HTML 2D correspondente
+                // Placa 2D em HTML plano
                 let labelDiv = document.createElement('div');
                 labelDiv.className = 'poi-label';
                 labelDiv.id = `label-${index}`;
                 labelDiv.textContent = poi.name;
                 labelsContainer.appendChild(labelDiv);
 
-                // Armazena a referência para o loop de frames
-                poisinScene.push({
+                // Registra na nossa lista global consistente
+                poisInScene.push({
                     anchor3D: anchor.object3D,
                     tip3D: tip.object3D,
                     label2D: labelDiv,
@@ -176,10 +176,10 @@
             widthHalf = width / 2;
             heightHalf = height / 2;
 
-            // Limpa as linhas anteriores
+            // Limpa as linhas SVG antigas do frame anterior
             svgEl.innerHTML = '';
 
-            poisinScene.forEach(poi => {
+            poisInScene.forEach(poi => {
                 poi.anchor3D.updateMatrixWorld();
                 poi.tip3D.updateMatrixWorld();
 
@@ -191,7 +191,7 @@
 
                 let tempV = posAnchor.clone().project(cameraThree);
                 
-                if (tempV.z < 1) { // Só renderiza o que estiver no campo visual frontal
+                if (tempV.z < 1) { // Só mostra o que está na frente da câmera do celular
                     let anchor2D = projectToScreen(posAnchor);
                     let tip2D = projectToScreen(posTip);
 
@@ -200,14 +200,14 @@
                     poi.label2D.style.left = `${tip2D.x}px`;
                     poi.label2D.style.top = `${tip2D.y}px`;
 
-                    // 2. Desenha a linha conetora SVG com largura duplicada (largura: 16)
+                    // 2. Desenha a linha conetora SVG com espessura duplicada (largura: 16)
                     let svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     svgLine.setAttribute('x1', anchor2D.x);
                     svgLine.setAttribute('y1', anchor2D.y);
                     svgLine.setAttribute('x2', tip2D.x);
                     svgLine.setAttribute('y2', tip2D.y);
                     svgLine.setAttribute('stroke', poi.color);
-                    svgLine.setAttribute('stroke-width', '16'); // LARGURA DUPLICADA
+                    svgLine.setAttribute('stroke-width', '16'); // LINHAS DUAS VEZES MAIS GROSSAS!
                     svgLine.setAttribute('stroke-linecap', 'round');
                     svgEl.appendChild(svgLine);
                 } else {
@@ -257,9 +257,9 @@
                 // Remove o balão de calibração amarela da cena
                 const calIndex = poisInScene.findIndex(p => p.isCalTarget);
                 if (calIndex !== -1) {
-                    poisinScene[calIndex].label2D.style.display = 'none';
-                    poisinScene[calIndex].label2D.remove();
-                    poisinScene.splice(calIndex, 1);
+                    poisInScene[calIndex].label2D.style.display = 'none';
+                    poisInScene[calIndex].label2D.remove();
+                    poisInScene.splice(calIndex, 1);
                 }
             }
         }
