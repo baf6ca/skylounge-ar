@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
     <title>Bosch Skylounge AR</title>
     <meta name="description" content="Experiência de Realidade Aumentada no Skylounge da Bosch.">
-    <!-- Importa a biblioteca A-Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; }
@@ -22,86 +20,86 @@
 
         <a-entity id="world">
             
-            <!-- 📌 PONTO DE REFERÊNCIA (CALIBRAÇÃO) - SUMIRÁ APÓS CLICAR -->
             <a-entity id="calibrationTarget" position="0 1.5 -50">
-                <a-text value="[Mire na Caixa d'agua e clique abaixo]" align="center" color="yellow" width="40" position="0 5 0" geometry="primitive: plane; width: 15; height: 2" material="color: black; opacity: 0.8"></a-text>
-                <a-cylinder height="5" radius="0.04" color="yellow" position="0 2.5 0"></a-cylinder>
+                <a-plane width="16" height="3" position="0 5 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="[Mire na Caixa d'agua e clique abaixo]" align="center" color="yellow" width="40" position="0 5.2 0.1"></a-text>
+                <a-cylinder height="5" radius="0.12" color="yellow" position="0 2.5 0"></a-cylinder>
             </a-entity>
 
             <!-- =================================================================== -->
-            <!-- ======== PONTOS DE INTERESSE COM FUNDO E LINHA AJUSTADOS ======= -->
+            <!-- ===== PONTOS DE INTERESSE COM PAINÉIS E LINHAS AJUSTADOS ====== -->
             <!-- =================================================================== -->
             
-            <!-- Test Track (Aproximado de -120 para -80 e texto maior) -->
             <a-entity position="-50 1 -80">
-                <a-text value="Test Track" align="center" color="white" width="55" position="0 8 0" geometry="primitive: plane; width: 11; height: 2.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="8" radius="0.03" color="#A9A9A9" position="0 4 0"></a-cylinder>
+                <a-plane width="12" height="3" position="0 8 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="Test Track" align="center" color="white" width="55" position="0 8.2 0.1"></a-text>
+                <a-cylinder height="8" radius="0.12" color="#A9A9A9" position="0 4 0"></a-cylinder>
             </a-entity>
 
-            <!-- Biofuels Competence Center (Texto e caixa aumentados) -->
             <a-entity position="-10 2 -70">
-                <a-text value="Biofuels Competence\nCenter" align="center" color="white" width="45" wrap-count="20" position="0 7 0" geometry="primitive: plane; width: 14; height: 3.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="7" radius="0.03" color="#3CB371" position="0 3.5 0"></a-cylinder>
+                <a-plane width="15" height="4" position="0 7 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="Biofuels Competence Center" wrap-count="20" align="center" color="white" width="45" position="0 7.2 0.1"></a-text>
+                <a-cylinder height="7" radius="0.12" color="#3CB371" position="0 3.5 0"></a-cylinder>
             </a-entity>
             
-            <!-- Cantina -->
             <a-entity position="25 0 -50">
-                <a-text value="Cantina" align="center" color="white" width="45" position="0 6 0" geometry="primitive: plane; width: 8; height: 2.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="6" radius="0.03" color="#9400D3" position="0 3 0"></a-cylinder>
+                <a-plane width="9" height="3" position="0 6 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="Cantina" align="center" color="white" width="45" position="0 6.2 0.1"></a-text>
+                <a-cylinder height="6" radius="0.12" color="#9400D3" position="0 3 0"></a-cylinder>
             </a-entity>
 
-            <!-- MA - Automotive Training Center -->
             <a-entity position="50 0 -60">
-                <a-text value="MA - Automotive\nTraining Center" align="center" color="white" width="40" wrap-count="20" position="0 7 0" geometry="primitive: plane; width: 13; height: 3.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="7" radius="0.03" color="#1E90FF" position="0 3.5 0"></a-cylinder>
+                <a-plane width="14" height="4" position="0 7 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="MA - Automotive Training Center" wrap-count="20" align="center" color="white" width="40" position="0 7.2 0.1"></a-text>
+                <a-cylinder height="7" radius="0.12" color="#1E90FF" position="0 3.5 0"></a-cylinder>
             </a-entity>
 
-            <!-- PT - Power Tools (Aproximado de -100 para -80) -->
             <a-entity position="-80 0 -80">
-                <a-text value="PT - Power Tools" align="center" color="white" width="50" position="0 10 0" geometry="primitive: plane; width: 13; height: 2.8" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="10" radius="0.03" color="#005691" position="0 5 0"></a-cylinder>
+                <a-plane width="14" height="3" position="0 10 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="PT - Power Tools" align="center" color="white" width="50" position="0 10.2 0.1"></a-text>
+                <a-cylinder height="10" radius="0.12" color="#005691" position="0 5 0"></a-cylinder>
             </a-entity>
 
-            <!-- Logistic Center (Aproximado de -150 para -90) -->
             <a-entity position="-90 2 -90">
-                <a-text value="Logistic Center" align="center" color="white" width="55" position="0 10 0" geometry="primitive: plane; width: 13; height: 2.8" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="10" radius="0.03" color="#C71585" position="0 5 0"></a-cylinder>
+                <a-plane width="14" height="3" position="0 10 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="Logistic Center" align="center" color="white" width="55" position="0 10.2 0.1"></a-text>
+                <a-cylinder height="10" radius="0.12" color="#C71585" position="0 5 0"></a-cylinder>
             </a-entity>
             
-            <!-- Preserved Area (Aproximado de -100 para -80) -->
             <a-entity position="-110 4 -80">
-                <a-text value="Preserved Area" align="center" color="white" width="55" position="0 12 0" geometry="primitive: plane; width: 13; height: 2.8" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="12" radius="0.03" color="#228B22" position="0 6 0"></a-cylinder>
+                <a-plane width="14" height="3" position="0 12 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="Preserved Area" align="center" color="white" width="55" position="0 12.2 0.1"></a-text>
+                <a-cylinder height="12" radius="0.12" color="#228B22" position="0 6 0"></a-cylinder>
             </a-entity>
 
-            <!-- VM - Vehicle Motion (Labs) -->
             <a-entity position="30 2 -80">
-                <a-text value="VM - Vehicle\nMotion Labs" align="center" color="white" width="45" wrap-count="18" position="0 7 0" geometry="primitive: plane; width: 12; height: 3.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="7" radius="0.03" color="#6A5ACD" position="0 3.5 0"></a-cylinder>
+                <a-plane width="13" height="4" position="0 7 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="VM - Vehicle Motion Labs" wrap-count="18" align="center" color="white" width="45" position="0 7.2 0.1"></a-text>
+                <a-cylinder height="7" radius="0.12" color="#6A5ACD" position="0 3.5 0"></a-cylinder>
             </a-entity>
             
-            <!-- PS - Power Solutions (Aproximado de -150 para -90) -->
             <a-entity position="40 4 -90">
-                <a-text value="PS - Power Solutions" align="center" color="white" width="55" position="0 10 0" geometry="primitive: plane; width: 14; height: 2.8" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="10" radius="0.03" color="#FF4500" position="0 5 0"></a-cylinder>
+                <a-plane width="15" height="3" position="0 10 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="PS - Power Solutions" align="center" color="white" width="55" position="0 10.2 0.1"></a-text>
+                <a-cylinder height="10" radius="0.12" color="#FF4500" position="0 5 0"></a-cylinder>
             </a-entity>
             
-            <!-- EM - Electrification Showroom -->
             <a-entity position="50 0 -90">
-                <a-text value="EM - Electrification\nShowroom" align="center" color="white" width="45" wrap-count="20" position="0 8 0" geometry="primitive: plane; width: 14; height: 3.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="8" radius="0.03" color="#00CED1" position="0 4 0"></a-cylinder>
+                <a-plane width="15" height="4" position="0 8 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="EM - Electrification Showroom" wrap-count="20" align="center" color="white" width="45" position="0 8.2 0.1"></a-text>
+                <a-cylinder height="8" radius="0.12" color="#00CED1" position="0 4 0"></a-cylinder>
             </a-entity>
 
-            <!-- SMAG -->
             <a-entity position="70 0 -85">
-                <a-text value="SMAG" align="center" color="white" width="50" position="0 6 0" geometry="primitive: plane; width: 8; height: 2.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="6" radius="0.03" color="#FFD700" position="0 3 0"></a-cylinder>
+                <a-plane width="9" height="3" position="0 6 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="SMAG" align="center" color="white" width="50" position="0 6.2 0.1"></a-text>
+                <a-cylinder height="6" radius="0.12" color="#FFD700" position="0 3 0"></a-cylinder>
             </a-entity>
 
-            <!-- MA - Mobility Aftermarket -->
             <a-entity position="60 0 -60">
-                <a-text value="MA - Mobility\nAftermarket" align="center" color="white" width="40" wrap-count="18" position="0 7 0" geometry="primitive: plane; width: 12; height: 3.5" material="color: black; opacity: 0.8; shader: flat"></a-text>
-                <a-cylinder height="7" radius="0.03" color="#ADD8E6" position="0 3.5 0"></a-cylinder>
+                <a-plane width="13" height="4" position="0 7 0" color="black" opacity="0.8"></a-plane>
+                <a-text value="MA - Mobility Aftermarket" wrap-count="18" align="center" color="white" width="40" position="0 7.2 0.1"></a-text>
+                <a-cylinder height="7" radius="0.12" color="#ADD8E6" position="0 3.5 0"></a-cylinder>
             </a-entity>
 
         </a-entity>
