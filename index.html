@@ -1,70 +1,225 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Bosch Skylounge AR</title>
     <meta name="description" content="Experiência de Realidade Aumentada no Skylounge da Bosch.">
-    <!-- Importa a biblioteca A-Frame -->
+    <!-- Importa a biblioteca A-Frame essencial para a realidade aumentada -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; }
-        #webcam { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
-        .ui-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; width: 90%; max-width: 400px; }
-        .calibrate-button { padding: 14px 24px; background-color: #007BC0; color: white; border: none; border-radius: 8px; font-family: sans-serif; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); width: 100%; }
-        .instructions { color: white; font-family: sans-serif; background-color: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; line-height: 1.4; }
+        
+        /* Força a câmera do celular a preencher toda a tela no fundo */
+        #webcam { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover; 
+            z-index: -1; 
+        }
+        
+        /* Container inferior com botões e instruções */
+        .ui-container { 
+            position: absolute; 
+            bottom: 30px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 10; 
+            text-align: center; 
+            width: 90%; 
+            max-width: 400px; 
+        }
+        
+        /* Estilo elegante do botão de calibração na cor Azul Bosch */
+        .calibrate-button { 
+            padding: 14px 24px; 
+            background-color: #007BC0; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-family: sans-serif; 
+            font-weight: bold; 
+            font-size: 16px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); 
+            width: 100%; 
+        }
+        
+        /* Estilo da caixinha de instrução */
+        .instructions { 
+            color: white; 
+            font-family: sans-serif; 
+            background-color: rgba(0,0,0,0.7); 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            margin-bottom: 12px; 
+            font-size: 14px; 
+            line-height: 1.4; 
+        }
     </style>
 </head>
 <body>
+
+    <!-- Vídeo da câmera real que roda atrás dos pontos AR -->
     <video id="webcam" autoplay playsinline muted></video>
 
+    <!-- Cena 3D Virtual de Realidade Aumentada -->
     <a-scene vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
+        
+        <!-- Câmera virtual do usuário -->
         <a-camera look-controls="touchEnabled: false"></a-camera>
 
+        <!-- O Grupo "Mundo" onde todos os pontos de interesse Bosch estão ancorados -->
         <a-entity id="world">
             
-            <!-- PONTO DE REFERÊNCIA (CALIBRAÇÃO) -->
-            <a-entity position="0 1 -60">
-                <a-text value="[Mire na Caixa d'agua e clique para CALIBRAR]" align="center" color="yellow" width="25" position="0 2.5 0"></a-text>
-                <a-circle color="yellow" radius="1.2" opacity="0.9"></a-circle>
+            <!-- 📌 PONTO DE REFERÊNCIA (Calibração na Caixa d'água) -->
+            <!-- Fica no ângulo de calibração exato (0 na nossa orientação virtual inicial) -->
+            <a-entity position="0 1.5 -50">
+                <a-text value="[Mire na Caixa d'agua e clique abaixo]" align="center" color="yellow" width="22" position="0 2 0"></a-text>
+                <a-circle color="yellow" radius="1" opacity="0.9"></a-circle>
             </a-entity>
 
             <!-- ======================================================= -->
-            <!-- ======== PONTOS DE INTERESSE MAPEADOS (TODOS) ========= -->
+            <!-- ============ MAPEAMENTO DOS PONTOS REAIS ============= -->
             <!-- ======================================================= -->
 
-            <!-- Test Track: Bem à esquerda e longe -->
-            <a-entity position="-70 1 -120">
-                <a-text value="Test Track" align="center" color="white" width="30" position="0 2.5 0"></a-text>
-                <a-circle color="#A9A9A9" radius="2" opacity="0.8"></a-circle>
-            </a-entity>
-
-            <!-- Biofuels Competence Center: Quase no centro -->
+            <!-- 1. Biofuels Competence Center -->
             <a-entity position="-10 2 -70">
                 <a-text value="Biofuels Competence Center" align="center" color="white" width="25" position="0 3 0"></a-text>
                 <a-box color="#3CB371" width="12" height="4" depth="1" opacity="0.7"></a-box>
             </a-entity>
+
+            <!-- 2. Test Track -->
+            <a-entity position="-70 1 -120">
+                <a-text value="Test Track" align="center" color="white" width="30" position="0 2.5 0"></a-text>
+                <a-circle color="#A9A9A9" radius="2" opacity="0.8"></a-circle>
+            </a-entity>
             
-            <!-- Cantina: À direita e mais perto -->
+            <!-- 3. Cantina -->
             <a-entity position="25 0 -50">
                 <a-text value="Cantina" align="center" color="white" width="30" position="0 3 0"></a-text>
                 <a-box color="#9400D3" width="15" height="5" depth="1" opacity="0.7"></a-box>
             </a-entity>
 
-            <!-- MA - Automotive Training Center: Bem à direita -->
+            <!-- 4. MA - Automotive Training Center -->
             <a-entity position="60 0 -70">
                 <a-text value="MA - Automotive Training Center" align="center" color="white" width="30" position="0 3 0"></a-text>
                 <a-box color="#1E90FF" width="12" height="5" depth="1" opacity="0.7"></a-box>
             </a-entity>
 
-            <!-- PT - Power Tools: Longe e à esquerda -->
+            <!-- 5. PT - Power Tools -->
             <a-entity position="-100 0 -100">
                 <a-text value="PT - Power Tools" align="center" color="white" width="40" position="0 5 0"></a-text>
                 <a-box color="#005691" width="20" height="8" depth="1" opacity="0.7"></a-box>
             </a-entity>
 
-            <!-- Logistic Center: Bem longe e à esquerda -->
+            <!-- 6. Logistic Center -->
             <a-entity position="-120 2 -150">
                 <a-text value="Logistic Center" align="center" color="white" width="35" position="0 3 0"></a-text>
                 <a-box color="#C71585" width="15" height="4" depth="1" opacity="0.7"></a-box>
             </a-entity>
             
-            <!-- Preserved Area: Extrema esquerda -->
+            <!-- 7. Preserved Area -->
+            <a-entity position="-150 5 -100">
+                <a-text value="Preserved Area" align="center" color="white" width="40" position="0 5 0"></a-text>
+                <a-sphere color="#228B22" radius="10" opacity="0.6"></a-sphere>
+            </a-entity>
+
+            <!-- 8. VM - Vehicle Motion (Labs) -->
+            <a-entity position="30 2 -80">
+                <a-text value="VM - Vehicle Motion Labs" align="center" color="white" width="30" position="0 3 0"></a-text>
+                <a-box color="#6A5ACD" width="12" height="5" depth="1" opacity="0.7"></a-box>
+            </a-entity>
+            
+            <!-- 9. PS - Power Solutions -->
+            <a-entity position="40 5 -150">
+                <a-text value="PS - Power Solutions" align="center" color="white" width="35" position="0 3 0"></a-text>
+                <a-circle color="#FF4500" radius="3" opacity="0.8"></a-circle>
+            </a-entity>
+            
+            <!-- 10. EM - Electrification Showroom -->
+            <a-entity position="50 0 -90">
+                <a-text value="EM - Electrification Showroom" align="center" color="white" width="30" position="0 3 0"></a-text>
+                <a-box color="#00CED1" width="15" height="5" depth="1" opacity="0.7"></a-box>
+            </a-entity>
+
+            <!-- 11. SMAG -->
+            <a-entity position="80 0 -95">
+                <a-text value="SMAG" align="center" color="white" width="25" position="0 2.5 0"></a-text>
+                <a-circle color="#FFD700" radius="2" opacity="0.8"></a-circle>
+            </a-entity>
+
+            <!-- 12. MA - Mobility Aftermarket -->
+            <a-entity position="70 0 -60">
+                <a-text value="MA - Mobility Aftermarket" align="center" color="white" width="30" position="0 2.5 0"></a-text>
+                <a-circle color="#ADD8E6" radius="2" opacity="0.8"></a-circle>
+            </a-entity>
+
+        </a-entity>
+    </a-scene>
+
+    <!-- Tela com Instrução e Botão de Calibração -->
+    <div class="ui-container">
+        <p class="instructions">Aponte a câmera exatamente para a Caixa d'água e toque no botão para alinhar o mapa.</p>
+        <button id="calibrateBtn" class="calibrate-button">Calibrar Vista</button>
+    </div>
+
+    <script>
+        // 1. Liga o feed da câmera traseira em tela cheia de forma responsiva
+        navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "environment" }, 
+            audio: false 
+        })
+        .then(stream => {
+            const video = document.getElementById('webcam');
+            video.srcObject = stream;
+            video.play();
+        })
+        .catch(err => { 
+            alert("Por favor, ative e autorize o acesso à câmera para rodar o WebAR."); 
+        });
+
+        // 2. Coordenada real da Caixa d'água medida pelo usuário (100 Graus - Leste)
+        const REFERENCE_HEADING = 100; 
+
+        // 3. Gerenciamento do botão de clique e permissões de giroscópio (iOS/Android)
+        document.getElementById('calibrateBtn').addEventListener('click', () => {
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            calibrate();
+                        } else {
+                            alert("É preciso autorizar o giroscópio para os pontos acompanharem o movimento do seu celular!");
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                calibrate();
+            }
+        });
+
+        // 4. Alinhamento angular do mundo 3D com base na orientação física real
+        function calibrate() {
+            const camera = document.querySelector('a-camera');
+            const world = document.getElementById('world');
+            if (camera && camera.object3D) {
+                const currentYRotation = camera.object3D.rotation.y;
+                const currentHeading = (currentYRotation * 180 / Math.PI) % 360;
+                
+                // Aplica o cálculo compensando o desvio em relação ao alvo de 100°
+                const offset = REFERENCE_HEADING + currentHeading;
+                
+                world.setAttribute('rotation', `0 ${offset} 0`);
+                
+                // Esconde a interface para deixar a tela limpa para navegação
+                document.querySelector('.ui-container').style.display = 'none';
+            } else {
+                alert("Os sensores ainda estão iniciando. Aguarde 2 segundos e clique novamente.");
+            }
+        }
+    </script>
+</body>
+</html>
