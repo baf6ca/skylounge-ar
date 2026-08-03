@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bosch Skylounge AR</title>
+    <meta name="description" content="Experiência de Realidade Aumentada no Skylounge da Bosch.">
+    <!-- Importa a biblioteca A-Frame -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+</head>
+<body>
+    <!-- 1. Estilos para a interface do usuário (botão, textos) -->
+    <style>
+        body { margin: 0; overflow: hidden; }
+        .ui-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        .calibrate-button {
+            padding: 14px 24px;
+            background-color: #007BC0; /* Azul Bosch */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            width: 100%;
+        }
+        .instructions {
+            color: white;
+            font-family: sans-serif;
+            background-color: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+    </style>
+
+    <!-- 2. A Cena de Realidade Aumentada -->
+    <a-scene vr-mode-ui="enabled: false">
+        
+        <!-- A câmera que mostra o mundo real e usa o giroscópio do celular -->
+        <a-camera></a-camera>
+
+        <!-- "Mundo Virtual" que agrupa todos os pontos de interesse -->
+        <!-- Giramos este grupo para calibrar a vista -->
+        <a-entity id="world">
+            
+            <!-- PONTO DE INTERESSE 1: Digihub -->
+            <!-- Posição: x(direita/esquerda) y(altura) z(frente/trás) -->
+            <a-entity position="-15 0 -50">
+                <a-text 
+                    value="Digihub"
+                    align="center"
+                    color="white"
+                    width="30"
+                    position="0 2 0">
+                </a-text>
+                <a-circle color="#8A2BE2" radius="1.5" opacity="0.8"></a-circle>
+            </a-entity>
+
+            <!-- PONTO DE INTERESSE 2: Power Tools -->
+            <a-entity position="50 0 -10">
+                <a-text 
+                    value="PT - Power Tools"
+                    align="center"
+                    color="white"
+                    width="30"
+                    position="0 2 0">
+                </a-text>
+                <a-circle color="#4682B4" radius="1.5" opacity="0.8"></a-circle>
+            </a-entity>
+
+            <!-- PONTO DE INTERESSE 3: Rodovia para SP / Campinas -->
+            <a-entity position="0 0 50">
+                <a-text 
+                    value="Rodovia para SP"
+                    align="center"
+                    color="white"
+                    width="30"
+                    position="0 2 0">
+                </a-text>
+                <a-circle color="#228B22" radius="1.5" opacity="0.8"></a-circle>
+            </a-entity>
+
+            <!-- Adicione mais tags <a-entity> para novos pontos de interesse aqui -->
+
+        </a-entity>
+    </a-scene>
+
+    <!-- 3. Interface do Usuário (Botão de Calibrar) -->
+    <div class="ui-container">
+        <p class="instructions">Aponte para o Prédio Principal e clique no botão abaixo para calibrar a bússola.</p>
+        <button id="calibrateBtn" class="calibrate-button">Calibrar Vista</button>
+    </div>
+
+    <!-- 4. Lógica de Calibração -->
+    <script>
+        // --- DIREÇÃO DE REFERÊNCIA (AZIMUTE REAL) ---
+        // Posição em graus do seu ponto de referência (Prédio Principal).
+        // Descubra este valor com uma bússola no celular quando estiver lá no local.
+        // (0=Norte, 90=Leste, 180=Sul, 270=Oeste)
+        const REFERENCE_HEADING = 180; // Inicialmente configurado como Sul (180°)
+
+        document.getElementById('calibrateBtn').addEventListener('click', () => {
+            // Solicitação de permissão de giroscópio específica para o iOS 13+ (iPhones)
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            calibrate();
+                        } else {
+                            alert("Permissão para giroscópio recusada. A experiência de AR precisa dos sensores do aparelho.");
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                // Em dispositivos Android, calibra diretamente
+                calibrate();
+            }
+        });
+
+        function calibrate() {
+            const camera = document.querySelector('a-camera');
+            const world = document.getElementById('world');
+            
+            // Pega a rotação do eixo Y da câmera do A-Frame
+            const currentYRotation = camera.el.object3D.rotation.y;
+            // Converte radianos para graus
+            const currentHeading = (THREE.MathUtils.radToDeg(currentYRotation)) % 360;
+            // Descobre o desvio da bússola
+            const offset = REFERENCE_HEADING - currentHeading;
+
+            // Aplica a rotação de calibração a todos os pontos de interesse simultaneamente
+            world.setAttribute('rotation', `0 ${offset} 0`);
+
+            // Oculta a caixa de calibração para liberar a vista inteira
+            document.querySelector('.ui-container').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
