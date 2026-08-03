@@ -5,11 +5,21 @@
     <meta name="description" content="Experiência de Realidade Aumentada no Skylounge da Bosch.">
     <!-- Importa a biblioteca A-Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-</head>
-<body>
-    <!-- 1. Estilos para a interface do usuário (botão, textos) -->
     <style>
-        body { margin: 0; overflow: hidden; }
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        
+        /* Câmera do celular em tela cheia no fundo do site */
+        #webcam {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1; /* Fica atrás dos pontos 3D */
+        }
+
+        /* Interface do Usuário */
         .ui-container {
             position: absolute;
             bottom: 30px;
@@ -44,19 +54,22 @@
             line-height: 1.4;
         }
     </style>
+</head>
+<body>
 
-    <!-- 2. A Cena de Realidade Aumentada -->
-    <a-scene vr-mode-ui="enabled: false">
+    <!-- Elemento de Vídeo que vai transmitir a câmera real do celular -->
+    <video id="webcam" autoplay playsinline muted></video>
+
+    <!-- A Cena de Realidade Aumentada (transparente para mostrar a câmera atrás) -->
+    <a-scene vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
         
-        <!-- A câmera que mostra o mundo real e usa o giroscópio do celular -->
-        <a-camera></a-camera>
+        <!-- Câmera virtual que segue o movimento do celular (giroscópio) sem arrastar o dedo -->
+        <a-camera look-controls="touchEnabled: false"></a-camera>
 
-        <!-- "Mundo Virtual" que agrupa todos os pontos de interesse -->
-        <!-- Giramos este grupo para calibrar a vista -->
+        <!-- "Mundo Virtual" que agrupa os pontos. Giramos ele ao calibrar -->
         <a-entity id="world">
             
-            <!-- PONTO DE INTERESSE 1: Digihub -->
-            <!-- Posição: x(direita/esquerda) y(altura) z(frente/trás) -->
+            <!-- PONTO DE TESTE 1: Digihub -->
             <a-entity position="-15 0 -50">
                 <a-text 
                     value="Digihub"
@@ -68,7 +81,7 @@
                 <a-circle color="#8A2BE2" radius="1.5" opacity="0.8"></a-circle>
             </a-entity>
 
-            <!-- PONTO DE INTERESSE 2: Power Tools -->
+            <!-- PONTO DE TESTE 2: Power Tools -->
             <a-entity position="50 0 -10">
                 <a-text 
                     value="PT - Power Tools"
@@ -80,7 +93,7 @@
                 <a-circle color="#4682B4" radius="1.5" opacity="0.8"></a-circle>
             </a-entity>
 
-            <!-- PONTO DE INTERESSE 3: Rodovia para SP / Campinas -->
+            <!-- PONTO DE TESTE 3: Estrada para SP -->
             <a-entity position="0 0 50">
                 <a-text 
                     value="Rodovia para SP"
@@ -92,34 +105,47 @@
                 <a-circle color="#228B22" radius="1.5" opacity="0.8"></a-circle>
             </a-entity>
 
-            <!-- Adicione mais tags <a-entity> para novos pontos de interesse aqui -->
-
         </a-entity>
     </a-scene>
 
-    <!-- 3. Interface do Usuário (Botão de Calibrar) -->
+    <!-- Interface do Usuário -->
     <div class="ui-container">
-        <p class="instructions">Aponte para o Prédio Principal e clique no botão abaixo para calibrar a bússola.</p>
+        <p class="instructions">Aponte para o ponto de referência e clique no botão abaixo para calibrar a vista.</p>
         <button id="calibrateBtn" class="calibrate-button">Calibrar Vista</button>
     </div>
 
-    <!-- 4. Lógica de Calibração -->
     <script>
-        // --- DIREÇÃO DE REFERÊNCIA (AZIMUTE REAL) ---
-        // Posição em graus do seu ponto de referência (Prédio Principal).
-        // Descubra este valor com uma bússola no celular quando estiver lá no local.
-        // (0=Norte, 90=Leste, 180=Sul, 270=Oeste)
-        const REFERENCE_HEADING = 180; // Inicialmente configurado como Sul (180°)
+        // --- 1. ATIVAR A CÂMERA TRASEIRA NO FUNDO ---
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: "environment", 
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }, 
+            audio: false 
+        })
+        .then(stream => {
+            const video = document.getElementById('webcam');
+            video.srcObject = stream;
+            video.play();
+        })
+        .catch(err => {
+            console.error("Erro ao acessar a câmera: ", err);
+            alert("Erro de câmera. Garanta que permitiu o acesso à câmera nas configurações do navegador do celular.");
+        });
+
+        // --- 2. LÓGICA DE CALIBRAÇÃO ---
+        const REFERENCE_HEADING = 180; // Configure o grau da bússola do seu ponto de referência aqui!
 
         document.getElementById('calibrateBtn').addEventListener('click', () => {
-            // Solicitação de permissão de giroscópio específica para o iOS 13+ (iPhones)
+            // Solicitação de permissão de giroscópio (Obrigatória em iPhones/iOS)
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
                         if (permissionState === 'granted') {
                             calibrate();
                         } else {
-                            alert("Permissão para giroscópio recusada. A experiência de AR precisa dos sensores do aparelho.");
+                            alert("Permissão de giroscópio negada. Os pontos não poderão seguir o movimento do celular.");
                         }
                     })
                     .catch(console.error);
@@ -133,18 +159,22 @@
             const camera = document.querySelector('a-camera');
             const world = document.getElementById('world');
             
-            // Pega a rotação do eixo Y da câmera do A-Frame
-            const currentYRotation = camera.el.object3D.rotation.y;
-            // Converte radianos para graus
-            const currentHeading = (THREE.MathUtils.radToDeg(currentYRotation)) % 360;
-            // Descobre o desvio da bússola
-            const offset = REFERENCE_HEADING - currentHeading;
+            if (camera && camera.object3D) {
+                // Obtém a rotação atual do eixo Y (giroscópio)
+                const currentYRotation = camera.object3D.rotation.y;
+                // Converte radianos para graus manualmente
+                const currentHeading = (currentYRotation * 180 / Math.PI) % 360;
+                // Calcula o desvio
+                const offset = REFERENCE_HEADING - currentHeading;
 
-            // Aplica a rotação de calibração a todos os pontos de interesse simultaneamente
-            world.setAttribute('rotation', `0 ${offset} 0`);
+                // Rotaciona o mundo inteiro para calibrar
+                world.setAttribute('rotation', `0 ${offset} 0`);
 
-            // Oculta a caixa de calibração para liberar a vista inteira
-            document.querySelector('.ui-container').style.display = 'none';
+                // Oculta os botões para limpar a tela
+                document.querySelector('.ui-container').style.display = 'none';
+            } else {
+                alert("O sistema 3D ainda está carregando. Aguarde 2 segundos e tente de novo.");
+            }
         }
     </script>
 </body>
