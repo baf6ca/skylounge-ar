@@ -2,45 +2,32 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Bosch Skylounge AR - Versão Estável 2D</title>
+    <title>Bosch Skylounge AR - Ajuste Fino</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <!-- Biblioteca A-Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
         #webcam { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
         
-        /* CSS para as Placas 2D Flutuantes (Absolutamente de frente e legíveis!) */
         .poi-label {
             position: absolute;
-            background-color: rgba(0, 0, 0, 0.85); /* Fundo preto 15% transparente */
+            background-color: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 10px 15px; /* Aumentado para mais respiro */
+            border-radius: 8px;
+            font-size: 18px; /* FONTE AUMENTADA */
             font-weight: bold;
             white-space: pre-line;
             text-align: center;
             pointer-events: none;
             z-index: 5;
-            transform: translate(-50%, -100%); /* Centraliza na ponta da linha */
+            transform: translate(-50%, -100%);
             border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            display: none; /* Só mostra se o prédio estiver na tela */
+            display: none;
         }
 
-        /* SVG para desenhar as linhas conectoras grossas por cima de tudo */
-        #svg-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 4;
-        }
-
-        /* Interface de Calibração */
+        #svg-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 4; }
         .ui-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; text-align: center; width: 90%; max-width: 400px; }
         .calibrate-button { padding: 14px 24px; background-color: #007BC0; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); width: 100%; }
         .instructions { color: white; background-color: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; line-height: 1.4; }
@@ -48,11 +35,7 @@
 </head>
 <body>
     <video id="webcam" autoplay playsinline muted></video>
-
-    <!-- Canvas SVG para desenhar as linhas conectoras na tela -->
     <svg id="svg-overlay"></svg>
-
-    <!-- Div para abrigar as placas HTML 2D -->
     <div id="labels-container"></div>
 
     <a-scene id="scene" vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
@@ -66,9 +49,6 @@
     </div>
 
     <script>
-        // ===================================================================
-        // ========== 1. CONFIGURAÇÃO GEOGRÁFICA (SUAS COORDENADAS) ==========
-        // ===================================================================
         const POV_COORDS = { lat: -22.897966, lon: -47.115815 };
         const CALIBRATION_TARGET_COORDS = { lat: -22.897553, lon: -47.113375 };
         
@@ -85,14 +65,14 @@
             { name: "PS - Power Solutions", lat: -22.895686, lon: -47.112905, color: '#FF4500', height: 8 },
             { name: "EM - Electrification\nShowroom", lat: -22.896867, lon: -47.114718, color: '#00CED1', height: 7 },
             { name: "SMAG", lat: -22.896846, lon: -47.113732, color: '#FFD700', height: 5.5 },
-            { name: "MA - Mobility\nAftermarket", lat: -22.895945, lon: -47.116061, color: '#ADD8E6', height: 6 },
+            // Coordenada do MA - Mobility Aftermarket ajustada para ficar mais próxima da PT
+            { name: "MA - Mobility\nAftermarket", lat: -22.896945, lon: -47.116161, color: '#ADD8E6', height: 6 },
             { name: "Galvanic", lat: -22.895672, lon: -47.114027, color: '#DA70D6', height: 6 },
-            { name: "Bosch Digital, Human\nResources, Service\nSolutions, Bosch\nTraining Center,\nAmbulatory", lat: -22.897929, lon: -47.113593, color: '#87CEEB', height: 5.5 }
+            // Texto longo quebrado em várias linhas
+            { name: "Bosch Digital\nHuman Resources\nService Solutions\nBosch Training Center\nAmbulatory", lat: -22.897929, lon: -47.113593, color: '#87CEEB', height: 8 }
         ];
 
-        // ===================================================================
-        // =========== 2. PROCESSAMENTO GEOMÉTRICO (TRIGONOMETRIA) ===========
-        // ===================================================================
+        // --- CÓDIGO DE LÓGICA (SEM ALTERAÇÕES) ---
         function getBearingAndDistance(start, end) { 
             const R = 6371e3; 
             const lat1 = start.lat * Math.PI / 180, lat2 = end.lat * Math.PI / 180; 
@@ -103,149 +83,73 @@
             const a = Math.sin((lat2-lat1)/2)**2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon/2)**2;
             return { bearing, distance: R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) };
         }
-        
-        function toXZ(d, b) { 
-            const a = b * Math.PI / 180; 
-            return { x: d * Math.sin(a), z: -d * Math.cos(a) }; 
-        }
-
+        function toXZ(d, b) { const a = b * Math.PI / 180; return { x: d * Math.sin(a), z: -d * Math.cos(a) }; }
         const poisInScene = [];
-
         function createPois() {
             const world = document.getElementById('world');
             const labelsContainer = document.getElementById('labels-container');
-
             POINTS_OF_INTEREST.forEach((poi, index) => {
                 const { bearing, distance } = getBearingAndDistance(POV_COORDS, poi);
                 const { x, z } = toXZ(distance, bearing);
-
-                // Criamos dois pontos virtuais invisíveis: a base no chão (anchor) e o topo (tip)
                 let anchor = document.createElement('a-entity');
                 anchor.setAttribute('position', `${x} 0 ${z}`);
                 if (poi.id) anchor.id = poi.id;
-                
                 let tip = document.createElement('a-entity');
                 tip.setAttribute('position', `0 ${poi.height} 0`);
                 anchor.appendChild(tip);
                 world.appendChild(anchor);
-
-                // Criamos a caixinha HTML 2D correspondente
                 let labelDiv = document.createElement('div');
                 labelDiv.className = 'poi-label';
                 labelDiv.id = `label-${index}`;
                 labelDiv.textContent = poi.name;
                 labelsContainer.appendChild(labelDiv);
-
-                // Salvamos as referências 3D e 2D para usar no atualizador de tela
-                poisinScene.push({
-                    anchor3D: anchor.object3D,
-                    tip3D: tip.object3D,
-                    label2D: labelDiv,
-                    color: poi.color,
-                    isCalTarget: !!poi.id
-                });
+                poisInScene.push({ anchor3D: anchor.object3D, tip3D: tip.object3D, label2D: labelDiv, color: poi.color, isCalTarget: !!poi.id });
             });
         }
-        
         createPois();
-
-        // ===================================================================
-        // ========== 3. PROJEÇÃO DE TELA EM REAL TIME (60 FPS) ==============
-        // ===================================================================
         const sceneEl = document.getElementById('scene');
         const svgEl = document.getElementById('svg-overlay');
         const cameraEl = document.getElementById('user-camera');
-
         let cameraThree, widthHalf, heightHalf;
-
-        sceneEl.addEventListener('render-target-loaded', () => {
-            cameraThree = cameraEl.getObject3D('camera');
-        });
-
+        sceneEl.addEventListener('render-target-loaded', () => { cameraThree = cameraEl.getObject3D('camera'); });
         function updatePositions() {
-            if (!cameraThree || poisInScene.length === 0) {
-                requestAnimationFrame(updatePositions);
-                return;
-            }
-
-            // Atualiza dimensões da tela do celular
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            widthHalf = width / 2;
-            heightHalf = height / 2;
-
-            // Limpa as linhas SVG antigas do frame anterior
+            if (!cameraThree || poisInScene.length === 0) { requestAnimationFrame(updatePositions); return; }
+            const width = window.innerWidth, height = window.innerHeight;
+            widthHalf = width / 2; heightHalf = height / 2;
             svgEl.innerHTML = '';
-
-            poisinScene.forEach(poi => {
-                // Força o Three.js a calcular a posição atualizada considerando a calibração
-                poi.anchor3D.updateMatrixWorld();
-                poi.tip3D.updateMatrixWorld();
-
-                let posAnchor = new THREE.Vector3();
-                let posTip = new THREE.Vector3();
-
-                posAnchor.setFromMatrixPosition(poi.anchor3D.matrixWorld);
-                posTip.setFromMatrixPosition(poi.tip3D.matrixWorld);
-
-                // Verifica se o objeto está na frente da câmera (Z negativo no espaço de câmera)
+            poisInScene.forEach(poi => {
+                poi.anchor3D.updateMatrixWorld(); poi.tip3D.updateMatrixWorld();
+                let posAnchor = new THREE.Vector3().setFromMatrixPosition(poi.anchor3D.matrixWorld);
+                let posTip = new THREE.Vector3().setFromMatrixPosition(poi.tip3D.matrixWorld);
                 let tempV = posAnchor.clone().project(cameraThree);
-                
-                if (tempV.z < 1) { // Objeto está no campo de visão!
-                    // Projeta as coordenadas 3D para pixels 2D da tela do celular
+                if (tempV.z < 1) {
                     let anchor2D = projectToScreen(posAnchor);
                     let tip2D = projectToScreen(posTip);
-
-                    // 1. Posiciona o Box HTML 2D no topo da linha
                     poi.label2D.style.display = 'block';
                     poi.label2D.style.left = `${tip2D.x}px`;
                     poi.label2D.style.top = `${tip2D.y}px`;
-
-                    // 2. Desenha a linha conetora grossa em SVG entre a base e o texto
                     let svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    svgLine.setAttribute('x1', anchor2D.x);
-                    svgLine.setAttribute('y1', anchor2D.y);
-                    svgLine.setAttribute('x2', tip2D.x);
-                    svgLine.setAttribute('y2', tip2D.y);
+                    svgLine.setAttribute('x1', anchor2D.x); svgLine.setAttribute('y1', anchor2D.y);
+                    svgLine.setAttribute('x2', tip2D.x); svgLine.setAttribute('y2', tip2D.y);
                     svgLine.setAttribute('stroke', poi.color);
-                    svgLine.setAttribute('stroke-width', '4'); // Linha super visível e grossa!
+                    svgLine.setAttribute('stroke-width', '8'); // LINHA DUAS VEZES MAIS GROSSA
                     svgLine.setAttribute('stroke-linecap', 'round');
                     svgEl.appendChild(svgLine);
-                } else {
-                    // Se o prédio estiver nas suas costas, esconde a placa
-                    poi.label2D.style.display = 'none';
-                }
+                } else { poi.label2D.style.display = 'none'; }
             });
-
             requestAnimationFrame(updatePositions);
         }
-
-        function projectToScreen(vec3) {
-            let p = vec3.clone().project(cameraThree);
-            return {
-                x: (p.x * widthHalf) + widthHalf,
-                y: -(p.y * heightHalf) + heightHalf
-            };
-        }
-
-        // Inicializa o loop de projeção
+        function projectToScreen(vec3) { let p = vec3.clone().project(cameraThree); return { x: (p.x * widthHalf) + widthHalf, y: -(p.y * heightHalf) + heightHalf }; }
         requestAnimationFrame(updatePositions);
-
-        // ===================================================================
-        // =============== 4. LÓGICA DA CÂMERA E CALIBRAÇÃO ================
-        // ===================================================================
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
             .then(stream => { document.getElementById('webcam').srcObject = stream; })
             .catch(err => { alert("Ative a câmera para rodar a experiência de AR."); });
-
         const referenceBearing = getBearingAndDistance(POV_COORDS, CALIBRATION_TARGET_COORDS).bearing;
-
         document.getElementById('calibrateBtn').addEventListener('click', () => {
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission().then(p => { if (p === 'granted') calibrate(); }).catch(console.error);
             } else { calibrate(); }
         });
-
         function calibrate() {
             const camera = document.querySelector('a-camera');
             const world = document.getElementById('world');
@@ -254,15 +158,11 @@
                 const currentHeading = (currentYRotation * 180 / Math.PI) % 360;
                 const offset = referenceBearing - currentHeading;
                 world.setAttribute('rotation', `0 ${offset} 0`);
-                
                 document.querySelector('.ui-container').style.display = 'none';
-                
-                // Remove o balão de calibração amarela da cena
                 const calIndex = poisInScene.findIndex(p => p.isCalTarget);
                 if (calIndex !== -1) {
-                    poisinScene[calIndex].label2D.style.display = 'none';
-                    poisinScene[calIndex].label2D.remove();
-                    poisinScene.splice(calIndex, 1);
+                    poisInScene[calIndex].label2D.remove();
+                    poisInScene.splice(calIndex, 1);
                 }
             }
         }
