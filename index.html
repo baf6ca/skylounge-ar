@@ -52,9 +52,9 @@
             { name: "Caixa d'agua\n(Calibração)", lat: -22.897553, lon: -47.113375, color: '#FFFF00', height: 8, id: 'calibrationTarget' },
             { name: "Biofuels Competence\nCenter", lat: -22.897342, lon: -47.112256, color: '#3CB371', height: 16 },
             { name: "Test Track", lat: -22.896887, lon: -47.111570, color: '#A9A9A9', height: 25 },
-            { name: "Cantina", lat: -22.898064, lon: -47.114763, color: '#9400D3', height: 0.5 },
+            { name: "Cantina", lat: -22.898064, lon: -47.114763, color: '#9400D3', height: 3.5 },
             { name: "MA - Automotive\nTraining Center", lat: -22.898384, lon: -47.114872, color: '#1E90FF', height: 4.5 },
-            { name: "PT - Power Tools", lat: -22.897242, lon: -47.115679, color: '#005691', height: 0,5 },
+            { name: "PT - Power Tools", lat: -22.897242, lon: -47.115679, color: '#005691', height: 6 },
             { name: "Logistic Center", lat: -22.894913, lon: -47.115306, color: '#C71585', height: 22 },
             { name: "Preserved Area", lat: -22.896832, lon: -47.117176, color: '#228B22', height: 9 },
             { name: "VM - Vehicle Motion\nLabs", lat: -22.895896, lon: -47.114976, color: '#6A5ACD', height: 18 },
@@ -105,96 +105,68 @@
                 poisInScene.push({ anchorEl: anchor, tipEl: tip, label2D: labelDiv, color: poi.color, isCalTarget: !!poi.id });
             });
         }
+        
+        const sceneEl = document.getElementById('scene');
+        const svgEl = document.getElementById('svg-overlay');
+        const cameraEl = document.getElementById('user-camera');
+        let cameraThree, widthHalf, heightHalf;
 
-        function initializeScene() {
-            createPois();
-            const sceneEl = document.getElementById('scene');
-            const svgEl = document.getElementById('svg-overlay');
-            const cameraEl = document.getElementById('user-camera');
-            let cameraThree, widthHalf, heightHalf;
-
-            function updatePositions() {
-                if (!cameraThree && cameraEl.object3D) {
-                    cameraThree = cameraEl.getObject3D('camera');
-                }
-                if (!cameraThree || poisInScene.length === 0) {
-                    requestAnimationFrame(updatePositions);
-                    return;
-                }
-                const width = window.innerWidth, height = window.innerHeight;
-                widthHalf = width / 2;
-                heightHalf = height / 2;
-                svgEl.innerHTML = '';
-                poisInScene.forEach(poi => {
-                    const anchor3D = poi.anchorEl.object3D;
-                    const tip3D = poi.tipEl.object3D;
-                    if (!anchor3D || !tip3D) return;
-                    anchor3D.updateMatrixWorld(true);
-                    let posAnchor = new THREE.Vector3().setFromMatrixPosition(anchor3D.matrixWorld);
-                    let posTip = new THREE.Vector3().setFromMatrixPosition(tip3D.matrixWorld);
-                    let tempV = posAnchor.clone().project(cameraThree);
-                    if (tempV.z < 1) {
-                        let anchor2D = projectToScreen(posAnchor);
-                        let tip2D = projectToScreen(posTip);
-                        poi.label2D.style.display = 'block';
-                        poi.label2D.style.left = `${tip2D.x}px`;
-                        poi.label2D.style.top = `${tip2D.y}px`;
-                        let svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        svgLine.setAttribute('x1', anchor2D.x);
-                        svgLine.setAttribute('y1', anchor2D.y);
-                        svgLine.setAttribute('x2', tip2D.x);
-                        svgLine.setAttribute('y2', tip2D.y);
-                        svgLine.setAttribute('stroke', poi.color);
-                        svgLine.setAttribute('stroke-width', '8');
-                        svgLine.setAttribute('stroke-linecap', 'round');
-                        svgEl.appendChild(svgLine);
-                    } else {
-                        poi.label2D.style.display = 'none';
-                    }
-                });
+        function updatePositions() {
+            if (!cameraThree && cameraEl.object3D) {
+                cameraThree = cameraEl.getObject3D('camera');
+            }
+            if (!cameraThree || poisInScene.length === 0) {
                 requestAnimationFrame(updatePositions);
+                return;
             }
-
-            function projectToScreen(vec3) {
-                let p = vec3.clone().project(cameraThree);
-                return {
-                    x: (p.x * widthHalf) + widthHalf,
-                    y: -(p.y * heightHalf) + heightHalf
-                };
-            }
+            const width = window.innerWidth, height = window.innerHeight;
+            widthHalf = width / 2;
+            heightHalf = height / 2;
+            svgEl.innerHTML = '';
+            poisInScene.forEach(poi => {
+                const anchor3D = poi.anchorEl.object3D;
+                const tip3D = poi.tipEl.object3D;
+                if (!anchor3D || !tip3D) return;
+                anchor3D.updateMatrixWorld(true);
+                let posAnchor = new THREE.Vector3().setFromMatrixPosition(anchor3D.matrixWorld);
+                let posTip = new THREE.Vector3().setFromMatrixPosition(tip3D.matrixWorld);
+                let tempV = posAnchor.clone().project(cameraThree);
+                if (tempV.z < 1) {
+                    let anchor2D = projectToScreen(posAnchor);
+                    let tip2D = projectToScreen(posTip);
+                    poi.label2D.style.display = 'block';
+                    poi.label2D.style.left = `${tip2D.x}px`;
+                    poi.label2D.style.top = `${tip2D.y}px`;
+                    let svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    svgLine.setAttribute('x1', anchor2D.x);
+                    svgLine.setAttribute('y1', anchor2D.y);
+                    svgLine.setAttribute('x2', tip2D.x);
+                    svgLine.setAttribute('y2', tip2D.y);
+                    svgLine.setAttribute('stroke', poi.color);
+                    svgLine.setAttribute('stroke-width', '8');
+                    svgLine.setAttribute('stroke-linecap', 'round');
+                    svgEl.appendChild(svgLine);
+                } else {
+                    poi.label2D.style.display = 'none';
+                }
+            });
             requestAnimationFrame(updatePositions);
         }
 
-        function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-                .then(stream => {
-                    const video = document.getElementById('webcam');
-                    video.srcObject = stream;
-                    video.play();
-                    initializeScene(); // INICIA O MUNDO AR APÓS A CÂMERA LIGAR
-                })
-                .catch(err => {
-                    alert("Por favor, permita o acesso à câmera para iniciar a experiência.");
-                });
+        function projectToScreen(vec3) {
+            let p = vec3.clone().project(cameraThree);
+            return {
+                x: (p.x * widthHalf) + widthHalf,
+                y: -(p.y * heightHalf) + heightHalf
+            };
         }
 
         const referenceBearing = getBearingAndDistance(POV_COORDS, CALIBRATION_TARGET_COORDS).bearing;
+        
         document.getElementById('calibrateBtn').addEventListener('click', () => {
-            const uiContainer = document.querySelector('.ui-container');
-            uiContainer.style.display = 'none'; // Some com o botão imediatamente
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(p => {
-                    if (p === 'granted') {
-                        startCamera();
-                        setTimeout(calibrate, 1000); // Dá 1s para os sensores estabilizarem
-                    } else {
-                        alert("É preciso permitir o giroscópio para a calibração funcionar.");
-                    }
-                }).catch(() => alert("Erro ao solicitar permissão do giroscópio."));
-            } else {
-                startCamera();
-                setTimeout(calibrate, 500);
-            }
+                DeviceOrientationEvent.requestPermission().then(p => { if (p === 'granted') calibrate(); }).catch(console.error);
+            } else { calibrate(); }
         });
 
         function calibrate() {
@@ -205,6 +177,7 @@
                 const currentHeading = (currentYRotation * 180 / Math.PI) % 360;
                 const offset = referenceBearing - currentHeading;
                 world.setAttribute('rotation', `0 ${offset} 0`);
+                document.querySelector('.ui-container').style.display = 'none';
                 const calIndex = poisInScene.findIndex(p => p.isCalTarget);
                 if (calIndex !== -1) {
                     poisInScene[calIndex].label2D.remove();
@@ -212,6 +185,21 @@
                 }
             }
         }
+        
+        // INICIALIZAÇÃO SEGURA
+        window.addEventListener('load', () => {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+                .then(stream => {
+                    const video = document.getElementById('webcam');
+                    video.srcObject = stream;
+                    video.play();
+                    createPois();
+                    requestAnimationFrame(updatePositions);
+                })
+                .catch(err => {
+                    alert("Por favor, permita o acesso à câmera para iniciar a experiência.");
+                });
+        });
     </script>
 </body>
 </html>
