@@ -16,7 +16,7 @@
             width: 100vw;
             height: 100vh;
             object-fit: cover;
-            z-index: -1; /* Fica atrás dos pontos 3D */
+            z-index: -1;
         }
 
         /* Interface do Usuário */
@@ -57,20 +57,31 @@
 </head>
 <body>
 
-    <!-- Elemento de Vídeo que vai transmitir a câmera real do celular -->
+    <!-- Vídeo da câmera real -->
     <video id="webcam" autoplay playsinline muted></video>
 
-    <!-- A Cena de Realidade Aumentada (transparente para mostrar a câmera atrás) -->
+    <!-- Cena 3D -->
     <a-scene vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
         
-        <!-- Câmera virtual que segue o movimento do celular (giroscópio) sem arrastar o dedo -->
         <a-camera look-controls="touchEnabled: false"></a-camera>
 
-        <!-- "Mundo Virtual" que agrupa os pontos. Giramos ele ao calibrar -->
         <a-entity id="world">
             
-            <!-- PONTO DE TESTE 1: Digihub -->
-            <a-entity position="-15 0 -50">
+            <!-- PONTO DE CALIBRAÇÃO (Estará bem no centro da sua tela ao calibrar!) -->
+            <!-- Posição: X=0 (Centro), Y=0 (Altura dos olhos), Z=-30 (30 metros de distância) -->
+            <a-entity position="0 0 -30">
+                <a-text 
+                    value="[ALVO REAL DE CALIBRACAO]"
+                    align="center"
+                    color="yellow"
+                    width="25"
+                    position="0 2.5 0">
+                </a-text>
+                <a-circle color="yellow" radius="1.2" opacity="0.9"></a-circle>
+            </a-entity>
+
+            <!-- PONTO DE INTERESSE: Digihub (Virado para o outro lado) -->
+            <a-entity position="0 0 50">
                 <a-text 
                     value="Digihub"
                     align="center"
@@ -81,8 +92,8 @@
                 <a-circle color="#8A2BE2" radius="1.5" opacity="0.8"></a-circle>
             </a-entity>
 
-            <!-- PONTO DE TESTE 2: Power Tools -->
-            <a-entity position="50 0 -10">
+            <!-- PONTO DE INTERESSE: Power Tools -->
+            <a-entity position="-45 0 20">
                 <a-text 
                     value="PT - Power Tools"
                     align="center"
@@ -93,35 +104,19 @@
                 <a-circle color="#4682B4" radius="1.5" opacity="0.8"></a-circle>
             </a-entity>
 
-            <!-- PONTO DE TESTE 3: Estrada para SP -->
-            <a-entity position="0 0 50">
-                <a-text 
-                    value="Rodovia para SP"
-                    align="center"
-                    color="white"
-                    width="30"
-                    position="0 2 0">
-                </a-text>
-                <a-circle color="#228B22" radius="1.5" opacity="0.8"></a-circle>
-            </a-entity>
-
         </a-entity>
     </a-scene>
 
-    <!-- Interface do Usuário -->
+    <!-- Interface -->
     <div class="ui-container">
-        <p class="instructions">Aponte para o ponto de referência e clique no botão abaixo para calibrar a vista.</p>
+        <p class="instructions">Aponte a câmera para a sua Referência Física Real (ex: Portaria) e clique abaixo.</p>
         <button id="calibrateBtn" class="calibrate-button">Calibrar Vista</button>
     </div>
 
     <script>
-        // --- 1. ATIVAR A CÂMERA TRASEIRA NO FUNDO ---
+        // Câmera traseira
         navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: "environment", 
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }, 
+            video: { facingMode: "environment" }, 
             audio: false 
         })
         .then(stream => {
@@ -130,27 +125,22 @@
             video.play();
         })
         .catch(err => {
-            console.error("Erro ao acessar a câmera: ", err);
-            alert("Erro de câmera. Garanta que permitiu o acesso à câmera nas configurações do navegador do celular.");
+            alert("Ative a câmera para rodar a experiência de AR.");
         });
 
-        // --- 2. LÓGICA DE CALIBRAÇÃO ---
-        const REFERENCE_HEADING = 180; // Configure o grau da bússola do seu ponto de referência aqui!
+        // LÓGICA DE CALIBRAÇÃO CORRIGIDA (Inversão de rotação)
+        const REFERENCE_HEADING = 180; // Configure o grau real da sua bússola para o ponto de referência aqui!
 
         document.getElementById('calibrateBtn').addEventListener('click', () => {
-            // Solicitação de permissão de giroscópio (Obrigatória em iPhones/iOS)
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission()
                     .then(permissionState => {
                         if (permissionState === 'granted') {
                             calibrate();
-                        } else {
-                            alert("Permissão de giroscópio negada. Os pontos não poderão seguir o movimento do celular.");
                         }
                     })
                     .catch(console.error);
             } else {
-                // Em dispositivos Android, calibra diretamente
                 calibrate();
             }
         });
@@ -160,20 +150,22 @@
             const world = document.getElementById('world');
             
             if (camera && camera.object3D) {
-                // Obtém a rotação atual do eixo Y (giroscópio)
+                // Rotação Y em radianos fornecida pelo A-Frame
                 const currentYRotation = camera.object3D.rotation.y;
-                // Converte radianos para graus manualmente
+                
+                // Converte para graus
                 const currentHeading = (currentYRotation * 180 / Math.PI) % 360;
-                // Calcula o desvio
-                const offset = REFERENCE_HEADING - currentHeading;
+                
+                // CORREÇÃO DE 180 GRAUS (Inversão do cálculo de rotação)
+                // Se estava deslocado em 180 graus, invertemos a compensação:
+                const offset = REFERENCE_HEADING + currentHeading; 
 
-                // Rotaciona o mundo inteiro para calibrar
+                // Aplica a nova rotação corrigida
                 world.setAttribute('rotation', `0 ${offset} 0`);
 
-                // Oculta os botões para limpar a tela
                 document.querySelector('.ui-container').style.display = 'none';
             } else {
-                alert("O sistema 3D ainda está carregando. Aguarde 2 segundos e tente de novo.");
+                alert("Carregando sensores...");
             }
         }
     </script>
