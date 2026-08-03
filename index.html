@@ -2,15 +2,18 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Bosch Skylounge AR - Versão Estável</title>
+    <title>Bosch Skylounge AR - Perspectiva Real 7º Andar</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- Biblioteca A-Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
         #webcam { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
+        
+        /* CSS das Placas 2D Flutuantes com Opacidade 30% (Efeito Vidro Jateado) */
         .poi-label {
             position: absolute;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.3); /* GARANTIDO: 30% DE OPACIDADE (BEM TRANSLÚCIDO) */
             color: white;
             padding: 10px 15px;
             border-radius: 8px;
@@ -22,7 +25,8 @@
             z-index: 5;
             transform: translate(-50%, -100%);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
             display: none;
         }
         #svg-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 4; }
@@ -35,10 +39,12 @@
     <video id="webcam" autoplay playsinline muted></video>
     <svg id="svg-overlay"></svg>
     <div id="labels-container"></div>
+    
     <a-scene id="scene" vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
         <a-camera id="user-camera" look-controls="touchEnabled: false"></a-camera>
         <a-entity id="world"></a-entity>
     </a-scene>
+    
     <div class="ui-container">
         <p class="instructions">Aponte a câmera para a Caixa d'água e clique abaixo para alinhar o mapa.</p>
         <button id="calibrateBtn" class="calibrate-button">Calibrar Vista</button>
@@ -48,14 +54,20 @@
         const POV_COORDS = { lat: -22.897966, lon: -47.115815 };
         const CALIBRATION_TARGET_COORDS = { lat: -22.897553, lon: -47.113375 };
         
+        // ===================================================================
+        // ========== AJUSTE MANUAL DE ALTURA DOS PRÉDIOS (HEIGHT) ===========
+        // ===================================================================
+        // Como o chão virtual está configurado a -22 metros (abaixo dos seus olhos):
+        // * "height: 3.5" significa que a placa ficará bem baixa (perto do solo real)
+        // * "height: 25" significa que a placa subirá em direção ao céu
         const POINTS_OF_INTEREST = [
-            { name: "Caixa d'agua\n(Calibração)", lat: -22.897553, lon: -47.113375, color: '#FFFF00', height: 8, id: 'calibrationTarget' },
+            { name: "Caixa d'agua\n(Calibração)", lat: -22.897553, lon: -47.113375, color: '#FFFF00', height: 12, id: 'calibrationTarget' },
             { name: "Biofuels Competence\nCenter", lat: -22.897342, lon: -47.112256, color: '#3CB371', height: 16 },
             { name: "Test Track", lat: -22.896887, lon: -47.111570, color: '#A9A9A9', height: 25 },
-            { name: "Cantina", lat: -22.898064, lon: -47.114763, color: '#9400D3', height: -500 },
-            { name: "MA - Automotive\nTraining Center", lat: -22.898384, lon: -47.114872, color: '#1E90FF', height: 4.5 },
-            { name: "PT - Power Tools", lat: -22.897242, lon: -47.115679, color: '#005691', height: -500 },
-            { name: "Logistic Center", lat: -22.894913, lon: -47.115306, color: '#C71585', height: 22 },
+            { name: "Cantina", lat: -22.898064, lon: -47.114763, color: '#9400D3', height: 3.5 }, // Muito próxima = linha curta e baixa
+            { name: "MA - Automotive\nTraining Center", lat: -22.898384, lon: -47.114872, color: '#1E90FF', height: 4.5 }, // Próxima
+            { name: "PT - Power Tools", lat: -22.897242, lon: -47.115679, color: '#005691', height: 6 }, // Próxima
+            { name: "Logistic Center", lat: -22.894913, lon: -47.115306, color: '#C71585', height: 22 }, // Longe = linha longa e alta
             { name: "Preserved Area", lat: -22.896832, lon: -47.117176, color: '#228B22', height: 9 },
             { name: "VM - Vehicle Motion\nLabs", lat: -22.895896, lon: -47.114976, color: '#6A5ACD', height: 18 },
             { name: "PS - Power Solutions", lat: -22.895686, lon: -47.112905, color: '#FF4500', height: 20 },
@@ -63,9 +75,11 @@
             { name: "SMAG", lat: -22.896846, lon: -47.113732, color: '#FFD700', height: 14 },
             { name: "MA - Mobility\nAftermarket", lat: -22.897000, lon: -47.115500, color: '#ADD8E6', height: 7 },
             { name: "Galvanic", lat: -22.895672, lon: -47.114027, color: '#DA70D6', height: 17 },
+            // NOMES COMPLETOS COM QUEBRAS DE LINHA E POSIÇÃO DE ALTURA MANUAL
             { name: "Bosch Digital\nHuman Resources\nService Solutions\nBosch Training Center\nAmbulatory", lat: -22.897929, lon: -47.113593, color: '#87CEEB', height: 6 }
         ];
 
+        // --- CÓDIGO DE LÓGICA DE EXECUÇÃO ---
         function getBearingAndDistance(start, end) {
             const R = 6371e3;
             const lat1 = start.lat * Math.PI / 180, lat2 = end.lat * Math.PI / 180;
@@ -87,86 +101,126 @@
         function createPois() {
             const world = document.getElementById('world');
             const labelsContainer = document.getElementById('labels-container');
+            
+            // CONFIGURAÇÃO DA ALTURA DA COBERTURA (7º ANDAR = 22 METROS DE ALTURA)
+            const groundY = -22;
+
             POINTS_OF_INTEREST.forEach((poi, index) => {
                 const { bearing, distance } = getBearingAndDistance(POV_COORDS, poi);
                 const { x, z } = toXZ(distance, bearing);
+                
+                // As bases de todas as âncoras agora são empurradas para o chão real (groundY = -22)
                 let anchor = document.createElement('a-entity');
-                anchor.setAttribute('position', { x: x, y: 0, z: z });
+                anchor.setAttribute('position', { x: x, y: groundY, z: z });
                 if (poi.id) anchor.id = poi.id;
+                
                 let tip = document.createElement('a-entity');
                 tip.setAttribute('position', { x: 0, y: poi.height, z: 0 });
                 anchor.appendChild(tip);
                 world.appendChild(anchor);
+                
                 let labelDiv = document.createElement('div');
                 labelDiv.className = 'poi-label';
                 labelDiv.id = `label-${index}`;
                 labelDiv.textContent = poi.name;
                 labelsContainer.appendChild(labelDiv);
+                
                 poisInScene.push({ anchorEl: anchor, tipEl: tip, label2D: labelDiv, color: poi.color, isCalTarget: !!poi.id });
             });
         }
-        
-        const sceneEl = document.getElementById('scene');
-        const svgEl = document.getElementById('svg-overlay');
-        const cameraEl = document.getElementById('user-camera');
-        let cameraThree, widthHalf, heightHalf;
 
-        function updatePositions() {
-            if (!cameraThree && cameraEl.object3D) {
-                cameraThree = cameraEl.getObject3D('camera');
-            }
-            if (!cameraThree || poisInScene.length === 0) {
-                requestAnimationFrame(updatePositions);
-                return;
-            }
-            const width = window.innerWidth, height = window.innerHeight;
-            widthHalf = width / 2;
-            heightHalf = height / 2;
-            svgEl.innerHTML = '';
-            poisInScene.forEach(poi => {
-                const anchor3D = poi.anchorEl.object3D;
-                const tip3D = poi.tipEl.object3D;
-                if (!anchor3D || !tip3D) return;
-                anchor3D.updateMatrixWorld(true);
-                let posAnchor = new THREE.Vector3().setFromMatrixPosition(anchor3D.matrixWorld);
-                let posTip = new THREE.Vector3().setFromMatrixPosition(tip3D.matrixWorld);
-                let tempV = posAnchor.clone().project(cameraThree);
-                if (tempV.z < 1) {
-                    let anchor2D = projectToScreen(posAnchor);
-                    let tip2D = projectToScreen(posTip);
-                    poi.label2D.style.display = 'block';
-                    poi.label2D.style.left = `${tip2D.x}px`;
-                    poi.label2D.style.top = `${tip2D.y}px`;
-                    let svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    svgLine.setAttribute('x1', anchor2D.x);
-                    svgLine.setAttribute('y1', anchor2D.y);
-                    svgLine.setAttribute('x2', tip2D.x);
-                    svgLine.setAttribute('y2', tip2D.y);
-                    svgLine.setAttribute('stroke', poi.color);
-                    svgLine.setAttribute('stroke-width', '8');
-                    svgLine.setAttribute('stroke-linecap', 'round');
-                    svgEl.appendChild(svgLine);
-                } else {
-                    poi.label2D.style.display = 'none';
+        function initializeScene() {
+            createPois();
+            const sceneEl = document.getElementById('scene');
+            const svgEl = document.getElementById('svg-overlay');
+            const cameraEl = document.getElementById('user-camera');
+            let cameraThree, widthHalf, heightHalf;
+
+            function updatePositions() {
+                if (!cameraThree && cameraEl.object3D) {
+                    cameraThree = cameraEl.getObject3D('camera');
                 }
-            });
+                if (!cameraThree || poisInScene.length === 0) {
+                    requestAnimationFrame(updatePositions);
+                    return;
+                }
+                const width = window.innerWidth, height = window.innerHeight;
+                widthHalf = width / 2;
+                heightHalf = height / 2;
+                svgEl.innerHTML = '';
+                poisInScene.forEach(poi => {
+                    const anchor3D = poi.anchorEl.object3D;
+                    const tip3D = poi.tipEl.object3D;
+                    if (!anchor3D || !tip3D) return;
+                    anchor3D.updateMatrixWorld(true);
+                    let posAnchor = new THREE.Vector3().setFromMatrixPosition(anchor3D.matrixWorld);
+                    let posTip = new THREE.Vector3().setFromMatrixPosition(tip3D.matrixWorld);
+                    let tempV = posAnchor.clone().project(cameraThree);
+                    if (tempV.z < 1) {
+                        let anchor2D = projectToScreen(posAnchor);
+                        let tip2D = projectToScreen(posTip);
+                        poi.label2D.style.display = 'block';
+                        poi.label2D.style.left = `${tip2D.x}px`;
+                        poi.label2D.style.top = `${tip2D.y}px`;
+                        
+                        // Desenha a linha conetora SVG com espessura fina/intermediária (stroke-width: 4)
+                        let svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        svgLine.setAttribute('x1', anchor2D.x);
+                        svgLine.setAttribute('y1', anchor2D.y);
+                        svgLine.setAttribute('x2', tip2D.x);
+                        svgLine.setAttribute('y2', tip2D.y);
+                        svgLine.setAttribute('stroke', poi.color);
+                        svgLine.setAttribute('stroke-width', '4'); // LINHA COM METADE DA ESPESSURA ANTERIOR (ULTRA LIMPA!)
+                        svgLine.setAttribute('stroke-linecap', 'round');
+                        svgEl.appendChild(svgLine);
+                    } else {
+                        poi.label2D.style.display = 'none';
+                    }
+                });
+                requestAnimationFrame(updatePositions);
+            }
+
+            function projectToScreen(vec3) {
+                let p = vec3.clone().project(cameraThree);
+                return {
+                    x: (p.x * widthHalf) + widthHalf,
+                    y: -(p.y * heightHalf) + heightHalf
+                };
+            }
             requestAnimationFrame(updatePositions);
         }
 
-        function projectToScreen(vec3) {
-            let p = vec3.clone().project(cameraThree);
-            return {
-                x: (p.x * widthHalf) + widthHalf,
-                y: -(p.y * heightHalf) + heightHalf
-            };
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+                .then(stream => {
+                    const video = document.getElementById('webcam');
+                    video.srcObject = stream;
+                    video.play();
+                    initializeScene(); 
+                })
+                .catch(err => {
+                    alert("Por favor, permita o acesso à câmera para iniciar a experiência.");
+                });
         }
 
         const referenceBearing = getBearingAndDistance(POV_COORDS, CALIBRATION_TARGET_COORDS).bearing;
         
         document.getElementById('calibrateBtn').addEventListener('click', () => {
+            const uiContainer = document.querySelector('.ui-container');
+            uiContainer.style.display = 'none'; 
             if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission().then(p => { if (p === 'granted') calibrate(); }).catch(console.error);
-            } else { calibrate(); }
+                DeviceOrientationEvent.requestPermission().then(p => {
+                    if (p === 'granted') {
+                        startCamera();
+                        setTimeout(calibrate, 1000); 
+                    } else {
+                        alert("É preciso permitir o giroscópio para a calibração funcionar.");
+                    }
+                }).catch(() => alert("Erro ao solicitar permissão do giroscópio."));
+            } else {
+                startCamera();
+                setTimeout(calibrate, 500);
+            }
         });
 
         function calibrate() {
@@ -177,7 +231,6 @@
                 const currentHeading = (currentYRotation * 180 / Math.PI) % 360;
                 const offset = referenceBearing - currentHeading;
                 world.setAttribute('rotation', `0 ${offset} 0`);
-                document.querySelector('.ui-container').style.display = 'none';
                 const calIndex = poisInScene.findIndex(p => p.isCalTarget);
                 if (calIndex !== -1) {
                     poisInScene[calIndex].label2D.remove();
@@ -185,21 +238,6 @@
                 }
             }
         }
-        
-        // INICIALIZAÇÃO SEGURA
-        window.addEventListener('load', () => {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-                .then(stream => {
-                    const video = document.getElementById('webcam');
-                    video.srcObject = stream;
-                    video.play();
-                    createPois();
-                    requestAnimationFrame(updatePositions);
-                })
-                .catch(err => {
-                    alert("Por favor, permita o acesso à câmera para iniciar a experiência.");
-                });
-        });
     </script>
 </body>
 </html>
