@@ -67,11 +67,10 @@
 
         <a-entity id="world">
             
-            <!-- PONTO DE CALIBRAÇÃO (Estará bem no centro da sua tela ao calibrar!) -->
-            <!-- Posição: X=0 (Centro), Y=0 (Altura dos olhos), Z=-30 (30 metros de distância) -->
-            <a-entity position="0 0 -30">
+            <!-- PONTO DE REFERÊNCIA PARA CALIBRAR (Aponte para a Caixa d'água) -->
+            <a-entity position="0 1 -60">
                 <a-text 
-                    value="[ALVO REAL DE CALIBRACAO]"
+                    value="[Mire na Caixa d'agua e clique para CALIBRAR]"
                     align="center"
                     color="yellow"
                     width="25"
@@ -80,28 +79,36 @@
                 <a-circle color="yellow" radius="1.2" opacity="0.9"></a-circle>
             </a-entity>
 
-            <!-- PONTO DE INTERESSE: Digihub (Virado para o outro lado) -->
-            <a-entity position="0 0 50">
-                <a-text 
-                    value="Digihub"
-                    align="center"
-                    color="white"
-                    width="30"
-                    position="0 2 0">
-                </a-text>
-                <a-circle color="#8A2BE2" radius="1.5" opacity="0.8"></a-circle>
+            <!-- ======================================================= -->
+            <!-- ======== PONTOS DE INTERESSE DA VISTA ATUAL ========= -->
+            <!-- ======================================================= -->
+
+            <!-- Test Track -->
+            <!-- Coordenadas: Bem à esquerda (-45) e mais longe (-100) -->
+            <a-entity position="-45 1 -100">
+                <a-text value="Test Track" align="center" color="white" width="30" position="0 2.5 0"></a-text>
+                <a-circle color="#CCCCCC" radius="2" opacity="0.8"></a-circle>
             </a-entity>
 
-            <!-- PONTO DE INTERESSE: Power Tools -->
-            <a-entity position="-45 0 20">
-                <a-text 
-                    value="PT - Power Tools"
-                    align="center"
-                    color="white"
-                    width="30"
-                    position="0 2 0">
-                </a-text>
-                <a-circle color="#4682B4" radius="1.5" opacity="0.8"></a-circle>
+            <!-- Biofuels Competence Center -->
+            <!-- Coordenadas: Quase no centro, um pouco à esquerda (-5) e distância média (-65) -->
+            <a-entity position="-5 2 -65">
+                <a-text value="Biofuels Competence Center" align="center" color="white" width="25" position="0 3 0"></a-text>
+                <a-box color="#3CB371" width="10" height="4" depth="1" opacity="0.7"></a-box>
+            </a-entity>
+
+            <!-- Cantina -->
+            <!-- Coordenadas: À direita (25) e mais perto (-50) -->
+            <a-entity position="25 0 -50">
+                <a-text value="Cantina" align="center" color="white" width="30" position="0 3 0"></a-text>
+                <a-box color="#9400D3" width="12" height="5" depth="1" opacity="0.7"></a-box>
+            </a-entity>
+
+            <!-- MA - Automotive Training Center -->
+            <!-- Coordenadas: Bem à direita (50) e distância média (-70) -->
+            <a-entity position="50 0 -70">
+                <a-text value="MA - Automotive Training Center" align="center" color="white" width="30" position="0 3 0"></a-text>
+                <a-box color="#1E90FF" width="10" height="5" depth="1" opacity="0.7"></a-box>
             </a-entity>
 
         </a-entity>
@@ -109,12 +116,12 @@
 
     <!-- Interface -->
     <div class="ui-container">
-        <p class="instructions">Aponte a câmera para a sua Referência Física Real (ex: Portaria) e clique abaixo.</p>
+        <p class="instructions">Aponte a câmera para a Caixa d'água e clique abaixo para calibrar a vista.</p>
         <button id="calibrateBtn" class="calibrate-button">Calibrar Vista</button>
     </div>
 
     <script>
-        // Câmera traseira
+        // --- Ativa a câmera traseira no fundo ---
         navigator.mediaDevices.getUserMedia({ 
             video: { facingMode: "environment" }, 
             audio: false 
@@ -128,8 +135,8 @@
             alert("Ative a câmera para rodar a experiência de AR.");
         });
 
-        // LÓGICA DE CALIBRAÇÃO CORRIGIDA (Inversão de rotação)
-        const REFERENCE_HEADING = 180; // Configure o grau real da sua bússola para o ponto de referência aqui!
+        // --- Lógica de Calibração Corrigida ---
+        const REFERENCE_HEADING = 180; // IMPORTANTE: Altere este valor para o grau real da bússola ao apontar para a Caixa d'água!
 
         document.getElementById('calibrateBtn').addEventListener('click', () => {
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -150,22 +157,14 @@
             const world = document.getElementById('world');
             
             if (camera && camera.object3D) {
-                // Rotação Y em radianos fornecida pelo A-Frame
                 const currentYRotation = camera.object3D.rotation.y;
-                
-                // Converte para graus
                 const currentHeading = (currentYRotation * 180 / Math.PI) % 360;
-                
-                // CORREÇÃO DE 180 GRAUS (Inversão do cálculo de rotação)
-                // Se estava deslocado em 180 graus, invertemos a compensação:
                 const offset = REFERENCE_HEADING + currentHeading; 
 
-                // Aplica a nova rotação corrigida
                 world.setAttribute('rotation', `0 ${offset} 0`);
-
                 document.querySelector('.ui-container').style.display = 'none';
             } else {
-                alert("Carregando sensores...");
+                alert("Carregando sensores... Tente de novo em 2 segundos.");
             }
         }
     </script>
