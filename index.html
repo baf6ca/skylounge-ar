@@ -15,7 +15,7 @@
 <body>
     <video id="webcam" autoplay playsinline muted></video>
 
-    <a-scene id="scene" vr-mode-ui="enabled: false" renderer="alpha: true" device-orientation-permission-ui="enabled: false">
+    <a-scene id="scene" vr-mode-ui="enabled: false" renderer="alpha: true; colorManagement: true;" device-orientation-permission-ui="enabled: false">
         <a-camera look-controls="touchEnabled: false"></a-camera>
         <a-entity id="world"></a-entity>
     </a-scene>
@@ -80,24 +80,29 @@
                 if (poi.id) entity.id = poi.id;
                 entity.setAttribute('position', `${x} 0 ${z}`);
                 
+                // --- MULTIPLICADOR DE ESCALA INTELIGENTE ---
+                // Quanto mais distante (Z maior), maior será o multiplicador de tamanho das placas!
+                const scaleFactor = Math.max(1, distance / 18); // Normaliza o tamanho confortavelmente para a tela do celular
+                
                 let textEl = document.createElement('a-text');
                 textEl.setAttribute('value', poi.name);
                 textEl.setAttribute('align', 'center');
                 textEl.setAttribute('color', 'white');
-                textEl.setAttribute('width', 40);
-                textEl.setAttribute('wrap-count', poi.name.length > 25 ? 25 : 35);
-                textEl.setAttribute('position', `0 ${poi.height + 1} 0.1`);
+                textEl.setAttribute('width', 15 * scaleFactor); // Escala dinâmica do texto
+                textEl.setAttribute('wrap-count', poi.name.length > 25 ? 20 : 25);
+                textEl.setAttribute('position', `0 ${poi.height + (1.2 * scaleFactor)} 0.1`);
 
                 let planeEl = document.createElement('a-plane');
-                planeEl.setAttribute('width', 15); // Largura fixa e generosa
-                planeEl.setAttribute('height', poi.name.split('\n').length * 1.5 + 1); // Altura se ajusta com quebra de linha
-                planeEl.setAttribute('position', `0 ${poi.height + 1} 0`);
+                // Alarga os painéis baseado no multiplicador para nunca cortar o texto
+                planeEl.setAttribute('width', 5.5 * scaleFactor); 
+                planeEl.setAttribute('height', (poi.name.split('\n').length * 0.7 + 0.5) * scaleFactor); 
+                planeEl.setAttribute('position', `0 ${poi.height + (1.2 * scaleFactor)} 0`);
                 planeEl.setAttribute('color', 'black');
                 planeEl.setAttribute('opacity', '0.8');
 
                 let lineEl = document.createElement('a-cylinder');
                 lineEl.setAttribute('height', poi.height);
-                lineEl.setAttribute('radius', '0.12'); // Linha 4x mais grossa
+                lineEl.setAttribute('radius', 0.05 * scaleFactor); // Linhas grossas proporcionais à distância
                 lineEl.setAttribute('color', poi.color);
                 lineEl.setAttribute('position', `0 ${poi.height / 2} 0`);
                 
