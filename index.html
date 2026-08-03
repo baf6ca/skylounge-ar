@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Bosch Skylounge AR - Ajustes Finos</title>
+    <title>Bosch Skylounge AR - Versão Estável Definitiva</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <!-- Biblioteca A-Frame -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
@@ -10,7 +10,7 @@
         body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
         #webcam { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
         
-        /* CSS das Placas 2D Flutuantes */
+        /* CSS das Placas 2D Flutuantes (Absolutamente à prova de falhas) */
         .poi-label {
             position: absolute;
             background-color: rgba(0, 0, 0, 0.85); /* Fundo preto 15% transparente */
@@ -23,7 +23,7 @@
             text-align: center;
             pointer-events: none;
             z-index: 5;
-            transform: translate(-50%, -100%); /* Garante que a ponta da linha toque na base do box */
+            transform: translate(-50%, -100%); /* Alinha o centro da base do box com a ponta da linha */
             border: 1.5px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 4px 10px rgba(0,0,0,0.6);
             display: none; /* Controlado dinamicamente por JS */
@@ -111,7 +111,7 @@
             return { x: d * Math.sin(a), z: -d * Math.cos(a) }; 
         }
 
-        // VARIÁVEL CORRIGIDA: Única em todo o código (Evita o travamento)
+        // Variável unificada com consistência perfeita (CamelCase com 'I' maiúsculo)
         const poisInScene = [];
 
         function createPois() {
@@ -139,10 +139,10 @@
                 labelDiv.textContent = poi.name;
                 labelsContainer.appendChild(labelDiv);
 
-                // Registra na nossa lista global consistente
+                // Salva a referência dos ELEMENTOS HTML, não do Object3D inicial nulo
                 poisInScene.push({
-                    anchor3D: anchor.object3D,
-                    tip3D: tip.object3D,
+                    anchorEl: anchor,
+                    tipEl: tip,
                     label2D: labelDiv,
                     color: poi.color,
                     isCalTarget: !!poi.id
@@ -166,6 +166,11 @@
         });
 
         function updatePositions() {
+            // Tentativa de carregar a câmera dinamicamente caso o evento target atrase
+            if (!cameraThree && cameraEl) {
+                cameraThree = cameraEl.getObject3D('camera');
+            }
+
             if (!cameraThree || poisInScene.length === 0) {
                 requestAnimationFrame(updatePositions);
                 return;
@@ -176,22 +181,29 @@
             widthHalf = width / 2;
             heightHalf = height / 2;
 
-            // Limpa as linhas SVG antigas do frame anterior
+            // Limpa as linhas do frame anterior
             svgEl.innerHTML = '';
 
             poisInScene.forEach(poi => {
-                poi.anchor3D.updateMatrixWorld();
-                poi.tip3D.updateMatrixWorld();
+                // RESGATA OS OBJECT3D EM TEMPO REAL (Evita o bug de leitura nula na inicialização)
+                const anchor3D = poi.anchorEl.object3D;
+                const tip3D = poi.tipEl.object3D;
+
+                // Se o A-Frame ainda não instanciou a física 3D do elemento, pula para o próximo com segurança
+                if (!anchor3D || !tip3D) return;
+
+                anchor3D.updateMatrixWorld();
+                tip3D.updateMatrixWorld();
 
                 let posAnchor = new THREE.Vector3();
                 let posTip = new THREE.Vector3();
 
-                posAnchor.setFromMatrixPosition(poi.anchor3D.matrixWorld);
-                posTip.setFromMatrixPosition(poi.tip3D.matrixWorld);
+                posAnchor.setFromMatrixPosition(anchor3D.matrixWorld);
+                posTip.setFromMatrixPosition(tip3D.matrixWorld);
 
                 let tempV = posAnchor.clone().project(cameraThree);
                 
-                if (tempV.z < 1) { // Só mostra o que está na frente da câmera do celular
+                if (tempV.z < 1) { // Só renderiza o que estiver no campo visual frontal (ângulo de visão do celular)
                     let anchor2D = projectToScreen(posAnchor);
                     let tip2D = projectToScreen(posTip);
 
@@ -200,14 +212,14 @@
                     poi.label2D.style.left = `${tip2D.x}px`;
                     poi.label2D.style.top = `${tip2D.y}px`;
 
-                    // 2. Desenha a linha conetora SVG com espessura duplicada (largura: 16)
+                    // 2. Desenha a linha conetora SVG com espessura de 16px (super grossa e visível)
                     let svgLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     svgLine.setAttribute('x1', anchor2D.x);
                     svgLine.setAttribute('y1', anchor2D.y);
                     svgLine.setAttribute('x2', tip2D.x);
                     svgLine.setAttribute('y2', tip2D.y);
                     svgLine.setAttribute('stroke', poi.color);
-                    svgLine.setAttribute('stroke-width', '16'); // LINHAS DUAS VEZES MAIS GROSSAS!
+                    svgLine.setAttribute('stroke-width', '16'); // LINHA EXTRA GROSSA
                     svgLine.setAttribute('stroke-linecap', 'round');
                     svgEl.appendChild(svgLine);
                 } else {
@@ -228,11 +240,13 @@
 
         requestAnimationFrame(updatePositions);
 
-        // ===================================================================
-        // =============== 4. CÂMERA E CALIBRAÇÃO GEOGRÁFICA ================
-        // ===================================================================
+        // ATIVAR CÂMERA DE FORMA RESILIENTE (Com play automático explícito)
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-            .then(stream => { document.getElementById('webcam').srcObject = stream; })
+            .then(stream => { 
+                const video = document.getElementById('webcam');
+                video.srcObject = stream;
+                video.play(); // Garante o início do vídeo em qualquer navegador
+            })
             .catch(err => { alert("Ative a câmera para rodar a experiência de AR."); });
 
         const referenceBearing = getBearingAndDistance(POV_COORDS, CALIBRATION_TARGET_COORDS).bearing;
