@@ -12,9 +12,9 @@
             position: absolute;
             background-color: rgba(0, 0, 0, 0.3);
             color: white;
-            padding: 8px 12px; /* Reduzido para acompanhar a fonte */
+            padding: 8px 12px;
             border-radius: 6px;
-            font-size: 14px; /* FONTE REDUZIDA */
+            font-size: 14px;
             font-weight: bold;
             white-space: pre-line;
             text-align: center;
@@ -50,22 +50,23 @@
         const POINTS_OF_INTEREST = [
             { name: "Caixa d'agua\n(Calibração)", lat: -22.897553, lon: -47.113375, color: '#FFFF00', id: 'calibrationTarget' },
             { name: "Biofuels Competence\nCenter", lat: -22.897342, lon: -47.112256, color: '#3CB371' },
-            { name: "Test Track", lat: -22.8965, lon: -47.111, color: '#A9A9A9' }, // Mais para trás
+            { name: "Test Track", lat: -22.896162, lon: -47.111013, color: '#A9A9A9' }, // COORDENADA ATUALIZADA
             { name: "Cantina", lat: -22.898064, lon: -47.114763, color: '#9400D3' },
             { name: "MA - Automotive\nTraining Center", lat: -22.898384, lon: -47.114872, color: '#1E90FF' },
             { name: "PT - Power Tools", lat: -22.897242, lon: -47.115679, color: '#005691' },
             { name: "Logistic Center", lat: -22.894913, lon: -47.115306, color: '#C71585' },
             { name: "Preserved Area", lat: -22.896832, lon: -47.117176, color: '#228B22' },
             { name: "VM - Vehicle Motion\nLabs", lat: -22.895896, lon: -47.114976, color: '#6A5ACD' },
-            { name: "PS - Power Solutions", lat: -22.8953, lon: -47.1128, color: '#FF4500' }, // Mais para trás
+            { name: "PS - Power Solutions", lat: -22.8953, lon: -47.1128, color: '#FF4500' },
             { name: "EM - Electrification\nShowroom", lat: -22.896867, lon: -47.114718, color: '#00CED1' },
             { name: "SMAG", lat: -22.896846, lon: -47.113732, color: '#FFD700' },
             { name: "MA - Mobility\nAftermarket", lat: -22.897000, lon: -47.115500, color: '#ADD8E6' },
             { name: "Galvanic", lat: -22.895672, lon: -47.114027, color: '#DA70D6' },
-            { name: "Bosch Digital\nHuman Resources\nService Solutions\nBosch Training Center\nAmbulatory", lat: -22.897929, lon: -47.1132, color: '#87CEEB' }, // Deslocado para a direita
+            { name: "Bosch Digital\nHuman Resources\nService Solutions\nBosch Training Center\nAmbulatory", lat: -22.898213, lon: -47.113482, color: '#87CEEB' }, // COORDENADA ATUALIZADA
             { name: "VM - Vehicle\nMotion Braking", lat: -22.896349, lon: -47.112422, color: '#6A5ACD' }
         ];
 
+        // --- O restante do código permanece o mesmo ---
         function getBearingAndDistance(start, end) {
             const R = 6371e3;
             const lat1 = start.lat * Math.PI / 180, lat2 = end.lat * Math.PI / 180;
@@ -76,14 +77,11 @@
             const a = Math.sin((lat2 - lat1) / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
             return { bearing, distance: R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) };
         }
-
         function toXZ(d, b) {
             const a = b * Math.PI / 180;
             return { x: d * Math.sin(a), z: -d * Math.cos(a) };
         }
-
         const poisInScene = [];
-
         function createPois() {
             const world = document.getElementById('world');
             const labelsContainer = document.getElementById('labels-container');
@@ -107,8 +105,6 @@
                 poisInScene.push({ anchorEl: anchor, tipEl: tip, label2D: labelDiv, color: poi.color, isCalTarget: !!poi.id });
             });
         }
-        
-        // --- O restante do código de inicialização e calibração permanece o mesmo ---
         function initializeScene() {
             const sceneEl = document.getElementById('scene');
             const svgEl = document.getElementById('svg-overlay');
