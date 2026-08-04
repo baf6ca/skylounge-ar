@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Bosch Skylounge AR - Altura Automática</title>
+    <title>Bosch Skylounge AR - Design Final</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <style>
@@ -10,11 +10,11 @@
         #webcam { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: -1; }
         .poi-label {
             position: absolute;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.3); /* OPACIDADE 30% */
             color: white;
             padding: 10px 15px;
             border-radius: 8px;
-            font-size: 20px;
+            font-size: 18px; /* FONTE REDUZIDA EM 10% */
             font-weight: bold;
             white-space: pre-line;
             text-align: center;
@@ -22,7 +22,7 @@
             z-index: 5;
             transform: translate(-50%, -100%);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            /* box-shadow removido */
             display: none;
         }
         #svg-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 4; }
@@ -48,7 +48,6 @@
         const POV_COORDS = { lat: -22.897966, lon: -47.115815 };
         const CALIBRATION_TARGET_COORDS = { lat: -22.897553, lon: -47.113375 };
         
-        // A propriedade 'height' foi removida, pois será calculada automaticamente
         const POINTS_OF_INTEREST = [
             { name: "Caixa d'agua\n(Calibração)", lat: -22.897553, lon: -47.113375, color: '#FFFF00', id: 'calibrationTarget' },
             { name: "Biofuels Competence\nCenter", lat: -22.897342, lon: -47.112256, color: '#3CB371' },
@@ -94,8 +93,8 @@
                 const { bearing, distance } = getBearingAndDistance(POV_COORDS, poi);
                 const { x, z } = toXZ(distance, bearing);
 
-                // --- FÓRMULA DE ALTURA AUTOMÁTICA ---
-                const height = (distance * 0.28) - 45;
+                // --- FÓRMULA DE ALTURA COM MAIOR SEPARAÇÃO VERTICAL ---
+                const height = (distance * 0.35) - 55;
 
                 let anchor = document.createElement('a-entity');
                 anchor.setAttribute('position', { x: x, y: groundY, z: z });
